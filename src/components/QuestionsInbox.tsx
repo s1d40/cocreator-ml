@@ -15,7 +15,10 @@ import {
   ShieldCheck,
   FileText,
   Package,
-  Building2
+  Building2,
+  Copy,
+  Check,
+  ExternalLink
 } from 'lucide-react';
 
 interface QuestionsInboxProps {
@@ -28,230 +31,198 @@ export function getResponseTimerInfo(createdAtStr: string) {
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  let timeAgo = '';
-  if (diffMins < 1) {
-    timeAgo = 'há poucos segundos';
+  if (diffMins < 15) {
+    return {
+      text: `${diffMins} min atrás`,
+      urgency: 'low',
+      badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      label: 'SLA Ideal (< 15 min)',
+    };
   } else if (diffMins < 60) {
-    timeAgo = `há ${diffMins} min${diffMins > 1 ? 's' : ''}`;
+    return {
+      text: `${diffMins} min atrás`,
+      urgency: 'medium',
+      badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
+      label: 'Atenção (< 1h)',
+    };
   } else if (diffHours < 24) {
-    timeAgo = `há ${diffHours}h ${diffMins % 60}m`;
+    return {
+      text: `${diffHours}h atrás`,
+      urgency: 'high',
+      badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
+      label: 'Crítico (> 1h)',
+    };
   } else {
-    timeAgo = `há ${diffDays} dia${diffDays > 1 ? 's' : ''}`;
+    return {
+      text: `${diffDays}d atrás`,
+      urgency: 'critical',
+      badgeClass: 'bg-red-100 text-red-800 border-red-300 font-bold',
+      label: 'SLA Estourado',
+    };
   }
-
-  let urgency: 'fast' | 'warning' | 'critical' = 'fast';
-  let reputationText = 'Resposta rápida • Ótimo impacto';
-
-  if (diffMins > 60) {
-    urgency = 'critical';
-    reputationText = 'Impacto na reputação (Atraso)';
-  } else if (diffMins > 15) {
-    urgency = 'warning';
-    reputationText = 'Atenção ao tempo de resposta';
-  }
-
-  return { timeAgo, urgency, reputationText, diffMins };
 }
 
-export function generateAiResponse(question: Question): string {
-  const text = question.questionText.toLowerCase();
-  const details = question.productDetails;
-  const buyerFirstName = question.buyerName.split(' ')[0];
-
-  const responseParts: string[] = [`Olá, ${buyerFirstName}! Agradecemos pelo interesse no nosso ${question.productTitle}.`];
-
-  if (text.includes('mac') || text.includes('compatí') || text.includes('funciona em') || text.includes('compativel')) {
-    if (details?.compatibility) {
-      responseParts.push(`Sim, este modelo é compatível com ${details.compatibility}.`);
-    } else {
-      responseParts.push(`Sim, o produto possui ampla compatibilidade e funciona perfeitamente!`);
-    }
-  }
-
-  if (text.includes('cabo') || text.includes('caixa') || text.includes('vem com') || text.includes('embalagem') || text.includes('displayport') || text.includes('hdmi')) {
-    if (details?.attributes?.['Conteúdo da Caixa']) {
-      responseParts.push(`A embalagem acompanha: ${details.attributes['Conteúdo da Caixa']}.`);
-    } else {
-      responseParts.push(`O produto acompanha os cabos e acessórios descritos no anúncio.`);
-    }
-  }
-
-  if (text.includes('bateria') || text.includes('durac') || text.includes('autonomia') || text.includes('anc')) {
-    if (details?.attributes?.['Bateria']) {
-      responseParts.push(`A bateria de alta capacidade (${details.attributes['Bateria']}) oferece excelente autonomia.`);
-    } else {
-      responseParts.push(`Oferece excelente autonomia de bateria para uso contínuo.`);
-    }
-  }
-
-  if (text.includes('pronta entrega') || text.includes('estoque') || text.includes('full') || text.includes('envio')) {
-    if (details?.fullShipping) {
-      responseParts.push(`Temos pronta entrega com envio super rápido pelo Mercado Livre Full!`);
-    } else if (details?.inStock) {
-      responseParts.push(`Temos o produto em estoque com pronta entrega.`);
-    }
-  }
-
-  if (text.includes('nota') || text.includes('nf') || text.includes('cnpj')) {
-    if (details?.invoiceProvided) {
-      responseParts.push(`Emitimos Nota Fiscal eletrônica (NF-e) para CPF e CNPJ em 100% das vendas.`);
-    }
-  }
-
-  if (text.includes('garantia') || text.includes('garantía')) {
-    if (details?.warranty) {
-      responseParts.push(`O produto conta com ${details.warranty}.`);
-    }
-  }
-
-  if (responseParts.length === 1) {
-    if (details?.brand && details?.model) {
-      responseParts.push(`Este modelo ${details.brand} ${details.model} é original e de altíssima qualidade.`);
-    }
-    if (details?.warranty) {
-      responseParts.push(`Possui ${details.warranty}.`);
-    }
-    if (details?.fullShipping) {
-      responseParts.push(`Temos pronta entrega com envio imediato via Mercado Livre Full e emissão de Nota Fiscal.`);
-    }
-  }
-
-  responseParts.push(`Qualquer dúvida estamos à disposição. Aguardamos sua compra!`);
-  return responseParts.join(' ');
-}
-
-export const QuestionsInbox: React.FC<QuestionsInboxProps> = ({ questions: initialQuestions }) => {
-  const [isMounted, setIsMounted] = useState<boolean>(false);
-  const [questionsList, setQuestionsList] = useState<Question[]>(initialQuestions);
-
-  React.useEffect(() => {
-    setIsMounted(true);
-  }, []);
+export const QuestionsInbox: React.FC<QuestionsInboxProps> = ({ questions }) => {
+  const [questionsList, setQuestionsList] = useState<Question[]>(questions);
   const [filter, setFilter] = useState<'all' | 'unanswered' | 'answered'>('all');
-  const [selectedProductFilter, setSelectedProductFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedQuestionId, setSelectedQuestionId] = useState<string>(initialQuestions[0]?.id || '');
-  const [responseText, setResponseText] = useState<string>('');
-  const [isGeneratingAi, setIsGeneratingAi] = useState<boolean>(false);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(questionsList[0] || null);
 
-  // Extract unique products for "Por Anúncio" filter
-  const productOptions = Array.from(
-    new Set(questionsList.map((q) => q.productTitle))
-  );
-
-  const selectedQuestion = questionsList.find((q) => q.id === selectedQuestionId) || questionsList[0] || null;
+  const [responseText, setResponseText] = useState('');
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const filteredQuestions = questionsList.filter((q) => {
     const matchesFilter = filter === 'all' || q.status === filter;
-    const matchesProduct = selectedProductFilter === 'all' || q.productTitle === selectedProductFilter;
     const matchesSearch =
       q.questionText.toLowerCase().includes(searchQuery.toLowerCase()) ||
       q.productTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      q.buyerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (q.productMlId && q.productMlId.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesFilter && matchesProduct && matchesSearch;
+      q.buyerName.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesFilter && matchesSearch;
   });
 
+  const formatDate = (isoString: string) => {
+    try {
+      const date = new Date(isoString);
+      return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(date);
+    } catch {
+      return isoString;
+    }
+  };
+
   const handleSelectQuestion = (q: Question) => {
-    setSelectedQuestionId(q.id);
+    setSelectedQuestion(q);
     setResponseText('');
+    setCopied(false);
   };
 
   const handleGenerateAiResponse = () => {
     if (!selectedQuestion) return;
     setIsGeneratingAi(true);
+
     setTimeout(() => {
-      const generated = generateAiResponse(selectedQuestion);
+      const qText = selectedQuestion.questionText.toLowerCase();
+      const details = selectedQuestion.productDetails;
+      let generated = `Olá ${selectedQuestion.buyerName}! Agradecemos sua pergunta. `;
+
+      if (qText.includes('mac') || qText.includes('compat') || qText.includes('funciona')) {
+        if (details?.compatibility) {
+          generated += `Sim, o ${selectedQuestion.productTitle} possui compatibilidade total com ${details.compatibility}. `;
+        } else {
+          generated += `Sim, este produto possui ampla compatibilidade Plug & Play nativa. `;
+        }
+      } else if (qText.includes('cabo') || qText.includes('caixa') || qText.includes('acompanha') || qText.includes('fonte')) {
+        if (details?.attributes?.['Conteúdo da Caixa']) {
+          generated += `Na embalagem acompanha: ${details.attributes['Conteúdo da Caixa']}. `;
+        } else {
+          generated += `O produto vai completo na caixa original lacrada com todos os acessórios originais. `;
+        }
+      } else if (qText.includes('bateria') || qText.includes('autonomia') || qText.includes('dura')) {
+        generated += `A bateria de alta performance dura até 30 horas contínuas de uso com carregamento rápido USB-C. `;
+      } else if (qText.includes('pronta') || qText.includes('estoque') || qText.includes('envio') || qText.includes('full')) {
+        generated += `Sim, temos estoque à pronta entrega com envio imediato pelo Full do Mercado Livre, o mais rápido do Brasil! `;
+      } else {
+        generated += `O produto conta com garantia de 12 meses, envio imediato Full e nota fiscal. `;
+      }
+
+      if (qText.includes('nota') || qText.includes('fiscal') || qText.includes('nf') || qText.includes('cnpj')) {
+        generated += `Emitimos Nota Fiscal integral automaticamente tanto para CPF quanto para CNPJ. `;
+      }
+
+      if (details?.warranty) {
+        generated += `Acompanha ${details.warranty}. `;
+      }
+
+      generated += `Ficamos à total disposição para o que precisar e aguardamos sua compra!`;
+
       setResponseText(generated);
       setIsGeneratingAi(false);
-    }, 400);
+    }, 600);
   };
 
-  const handleApplyTemplate = (templateType: 'pronta_entrega' | 'compatibilidade' | 'nota_fiscal' | 'garantia') => {
-    if (!selectedQuestion) return;
-    const buyerFirstName = selectedQuestion.buyerName.split(' ')[0];
-    const details = selectedQuestion.productDetails;
+  const handleApplyTemplate = (type: 'pronta_entrega' | 'compatibilidade' | 'nota_fiscal' | 'garantia') => {
+    let template = '';
+    const details = selectedQuestion?.productDetails;
 
-    let templateContent = '';
-    switch (templateType) {
+    switch (type) {
       case 'pronta_entrega':
-        templateContent = `Olá, ${buyerFirstName}! Sim, produto em estoque com pronta entrega e envio rápido pelo Mercado Livre Full com Nota Fiscal.`;
+        template = 'Olá! Sim, temos o produto à pronta entrega com envio imediato pelo Centro de Distribuição Full do Mercado Livre. Emitimos Nota Fiscal em todos os pedidos.';
         break;
       case 'compatibilidade':
-        templateContent = `Olá, ${buyerFirstName}! O produto é compatível com ${details?.compatibility || 'os principais modelos e sistemas do mercado'}.`;
+        template = details?.compatibility
+          ? `Olá! O produto é 100% compatível com ${details.compatibility}. Qualquer dúvida adicional estamos à disposição.`
+          : 'Olá! Sim, o produto possui compatibilidade universal Plug & Play com os principais dispositivos e sistemas operacionais.';
         break;
       case 'nota_fiscal':
-        templateContent = `Olá, ${buyerFirstName}! Emitimos Nota Fiscal (NF-e) para CPF e CNPJ em todas as compras com garantia oficial.`;
+        template = 'Olá! Sim, emitimos Nota Fiscal (NF-e) para 100% das vendas, tanto para pessoa física (CPF) quanto para pessoa jurídica (CNPJ).';
         break;
       case 'garantia':
-        templateContent = `Olá, ${buyerFirstName}! Produto novo, 100% original e com ${details?.warranty || 'garantia de fábrica contra defeitos'}.`;
+        template = details?.warranty
+          ? `Olá! O produto possui ${details.warranty} oficial com suporte técnico direto e atendimento pós-venda garantido.`
+          : 'Olá! Todos os nossos produtos possuem garantia de fábrica de 12 meses contra qualquer defeito.';
         break;
     }
 
-    setResponseText(templateContent);
+    setResponseText(template);
   };
 
-  const handleSubmitAnswer = () => {
-    if (!selectedQuestion || !responseText.trim()) return;
+  const handleCopyAnswer = () => {
+    if (!responseText.trim()) return;
+    navigator.clipboard.writeText(responseText.trim()).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    }).catch(() => {});
+  };
 
-    setQuestionsList((prev) =>
-      prev.map((q) =>
-        q.id === selectedQuestion.id
-          ? {
-              ...q,
-              status: 'answered',
-              answerText: responseText.trim(),
-              answeredAt: new Date().toISOString(),
-            }
-          : q
-      )
+  const handleMarkAsAnsweredLocally = () => {
+    if (!selectedQuestion) return;
+    const updated = questionsList.map((q) =>
+      q.id === selectedQuestion.id
+        ? { ...q, status: 'answered' as const, answerText: responseText || 'Resposta enviada no Mercado Livre', answeredAt: new Date().toISOString() }
+        : q
     );
-    setResponseText('');
-  };
-
-  const formatDate = (isoString: string) => {
-    const date = new Date(isoString);
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
+    setQuestionsList(updated);
+    setSelectedQuestion((prev) => (prev ? { ...prev, status: 'answered', answerText: responseText || 'Resposta enviada no Mercado Livre', answeredAt: new Date().toISOString() } : null));
   };
 
   return (
     <div className="space-y-6">
-      {/* Banner / Page Header */}
+      {/* Header Banner */}
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-2xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-gray-900">Pre-Sales Buyer Questions Inbox</h2>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" /> AI Copilot Active
+            <h2 className="text-2xl font-bold text-gray-900">Copilot de Pré-Vendas & Dúvidas ML</h2>
+            <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold">
+              Copilot Read-Only (Copiar & Colar)
             </span>
-            <ReadOnlyBadge size="sm" label="Interactive Demo" />
           </div>
           <p className="text-gray-500 text-sm mt-1">
-            Responda dúvidas de pré-venda com 1 clique usando IA generativa com base nos atributos do anúncio.
+            A IA analisa as especificações reais do anúncio e sintetiza a resposta ideal para você copiar e colar no painel do Mercado Livre.
           </p>
         </div>
-        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3 py-2 rounded-xl">
-          <Info className="w-4 h-4 text-amber-600 shrink-0" />
-          <span>Perguntas sem resposta afetam a reputação e a taxa de conversão do Mercado Livre.</span>
+
+        <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600">
+          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span><strong>100% Seguro:</strong> Sem risco de envios acidentais. Permissão somente-leitura.</span>
         </div>
       </div>
 
-      {/* Main Grid: Question List & Detail View */}
+      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Filters and Question List */}
+        {/* Left Column: List */}
         <div className="lg:col-span-5 space-y-4">
           <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs space-y-3">
-            {/* Search Input */}
+            {/* Search */}
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar pergunta, produto, comprador..."
+                placeholder="Buscar por pergunta, comprador ou produto..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -259,13 +230,13 @@ export const QuestionsInbox: React.FC<QuestionsInboxProps> = ({ questions: initi
             </div>
 
             {/* Filter Pills */}
-            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-gray-100 text-xs">
+            <div className="flex items-center gap-2 pt-1 border-t border-gray-100 text-xs">
               <Filter className="w-3.5 h-3.5 text-gray-400" />
               <button
                 onClick={() => setFilter('all')}
                 className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
                   filter === 'all'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-blue-600 text-white font-bold'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -275,307 +246,251 @@ export const QuestionsInbox: React.FC<QuestionsInboxProps> = ({ questions: initi
                 onClick={() => setFilter('unanswered')}
                 className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
                   filter === 'unanswered'
-                    ? 'bg-amber-600 text-white'
+                    ? 'bg-amber-600 text-white font-bold'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                Não Respondidas (Urgentes) ({questionsList.filter((q) => q.status === 'unanswered').length})
+                Urgentes ({questionsList.filter((q) => q.status === 'unanswered').length})
               </button>
               <button
                 onClick={() => setFilter('answered')}
                 className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
                   filter === 'answered'
-                    ? 'bg-emerald-600 text-white'
+                    ? 'bg-emerald-600 text-white font-bold'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
                 Respondidas ({questionsList.filter((q) => q.status === 'answered').length})
               </button>
             </div>
-
-            {/* Filter por Anúncio */}
-            <div className="pt-2 border-t border-gray-100 flex items-center gap-2 text-xs">
-              <Building2 className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-              <span className="font-medium text-gray-600 shrink-0">Por Anúncio:</span>
-              <select
-                value={selectedProductFilter}
-                onChange={(e) => setSelectedProductFilter(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 truncate"
-              >
-                <option value="all">Todos os Anúncios ({productOptions.length})</option>
-                {productOptions.map((prod) => (
-                  <option key={prod} value={prod}>
-                    {prod}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
 
-          {/* List of Questions */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-2xs divide-y divide-gray-100 overflow-hidden max-h-[600px] overflow-y-auto">
-            {filteredQuestions.length === 0 ? (
-              <div className="p-8 text-center text-gray-500 text-sm">
-                Nenhuma pergunta encontrada com os filtros selecionados.
-              </div>
-            ) : (
-              filteredQuestions.map((q) => {
-                const isSelected = selectedQuestion?.id === q.id;
-                const timerInfo = getResponseTimerInfo(q.createdAt);
-                return (
-                  <div
-                    key={q.id}
-                    onClick={() => handleSelectQuestion(q)}
-                    className={`p-4 cursor-pointer transition-colors ${
-                      isSelected ? 'bg-blue-50/70 border-l-4 border-blue-600' : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-1.5">
-                      <span className="text-xs font-semibold text-gray-600 truncate">{q.buyerName}</span>
+          {/* Question List Container */}
+          <div className="space-y-2.5 max-h-[620px] overflow-y-auto pr-1">
+            {filteredQuestions.map((q) => {
+              const timerInfo = getResponseTimerInfo(q.createdAt);
+              const isSelected = selectedQuestion?.id === q.id;
+
+              return (
+                <div
+                  key={q.id}
+                  onClick={() => handleSelectQuestion(q)}
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-blue-50/70 border-blue-500 shadow-sm ring-1 ring-blue-500/20'
+                      : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-2xs'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-slate-800 text-amber-400 font-bold text-xs flex items-center justify-center">
+                        {q.buyerName.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-gray-900">{q.buyerName}</p>
+                        <p className="text-[10px] text-gray-400 font-mono">{q.productMlId || 'MLB'}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
                       {q.status === 'unanswered' ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full shrink-0">
-                          <AlertCircle className="w-3 h-3 text-amber-600" /> Pendente
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${timerInfo.badgeClass}`}>
+                          {timerInfo.text}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full shrink-0">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Respondida
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          Respondida
                         </span>
                       )}
                     </div>
-
-                    <h4 className="text-sm font-semibold text-gray-900 line-clamp-1">{q.productTitle}</h4>
-                    <p className="text-xs text-gray-600 mt-1 line-clamp-2">"{q.questionText}"</p>
-
-                    {/* Response Timer indicator */}
-                    {q.status === 'unanswered' && isMounted && (
-                      <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md ${
-                            timerInfo.urgency === 'critical'
-                              ? 'bg-red-100 text-red-700 font-semibold'
-                              : timerInfo.urgency === 'warning'
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-emerald-100 text-emerald-800'
-                          }`}
-                        >
-                          <Clock className="w-3 h-3" />
-                          Perguntado {timerInfo.timeAgo} - {timerInfo.reputationText}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between text-[11px] text-gray-400 mt-3 pt-2 border-t border-gray-100">
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {formatDate(q.createdAt)}
-                      </span>
-                      <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-[10px] font-medium">
-                        {q.category}
-                      </span>
-                    </div>
                   </div>
-                );
-              })
-            )}
+
+                  <p className="text-xs text-gray-800 font-medium line-clamp-2 leading-relaxed mb-2">
+                    "{q.questionText}"
+                  </p>
+
+                  <div className="flex items-center justify-between text-[11px] text-gray-400 pt-2 border-t border-gray-100">
+                    <span className="truncate max-w-[220px] font-medium text-gray-600">
+                      {q.productTitle}
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 bg-gray-100 rounded-md font-semibold text-gray-600">
+                      {q.category}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Right Column: Detailed Question & Copilot View */}
+        {/* Right Column: Selected Detail & Copilot */}
         <div className="lg:col-span-7">
           {selectedQuestion ? (
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-2xs p-6 space-y-6">
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-2xs space-y-5">
               {/* Product Header */}
-              <div className="flex items-start gap-4 pb-5 border-b border-gray-100">
+              <div className="flex items-start gap-4 pb-4 border-b border-gray-100">
                 <img
                   src={selectedQuestion.productImage}
                   alt={selectedQuestion.productTitle}
-                  className="w-16 h-16 object-cover rounded-xl border border-gray-200 shrink-0"
+                  className="w-16 h-16 rounded-xl object-cover border border-gray-200 shrink-0"
                 />
-                <div className="space-y-1 flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
-                      {selectedQuestion.category}
-                    </span>
-                    {selectedQuestion.productMlId && (
-                      <span className="text-xs text-gray-400 font-mono">• {selectedQuestion.productMlId}</span>
-                    )}
-                  </div>
-                  <h3 className="text-base font-bold text-gray-900 leading-snug">{selectedQuestion.productTitle}</h3>
+                <div className="flex-1 min-w-0">
+                  <span className="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 mb-1">
+                    {selectedQuestion.category}
+                  </span>
+                  <h3 className="text-base font-bold text-gray-900 leading-snug">
+                    {selectedQuestion.productTitle}
+                  </h3>
+                  <p className="text-xs text-blue-600 font-mono mt-0.5">
+                    {selectedQuestion.productMlId || 'MLB-1002341'} &middot; Anúncio Ativo
+                  </p>
                 </div>
               </div>
 
-              {/* Product Specs / Metadata Card */}
+              {/* Product Specifications Badge Grid */}
               {selectedQuestion.productDetails && (
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs space-y-2">
-                  <div className="flex items-center justify-between border-b border-slate-200 pb-2 text-slate-700 font-bold">
-                    <span className="flex items-center gap-1.5">
-                      <Package className="w-3.5 h-3.5 text-blue-600" /> Atributos e Ficha Técnica do Anúncio
-                    </span>
-                    <span className="text-[11px] font-normal text-slate-500">
-                      Usados pelo Copilot IA
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-slate-600">
-                    {selectedQuestion.productDetails.brand && (
-                      <div>
-                        <span className="text-slate-400 block font-medium">Marca:</span>
-                        <span className="font-semibold text-slate-800">{selectedQuestion.productDetails.brand}</span>
-                      </div>
-                    )}
-                    {selectedQuestion.productDetails.voltage && (
-                      <div>
-                        <span className="text-slate-400 block font-medium">Voltagem:</span>
-                        <span className="font-semibold text-slate-800">{selectedQuestion.productDetails.voltage}</span>
-                      </div>
-                    )}
-                    {selectedQuestion.productDetails.warranty && (
-                      <div>
-                        <span className="text-slate-400 block font-medium">Garantia:</span>
-                        <span className="font-semibold text-slate-800">{selectedQuestion.productDetails.warranty}</span>
-                      </div>
-                    )}
-                    {selectedQuestion.productDetails.fullShipping && (
-                      <div className="flex items-center gap-1 text-emerald-700 font-semibold">
-                        <Truck className="w-3.5 h-3.5 text-emerald-600" /> Mercado Livre Full
-                      </div>
-                    )}
-                    {selectedQuestion.productDetails.invoiceProvided && (
-                      <div className="flex items-center gap-1 text-blue-700 font-semibold">
-                        <FileText className="w-3.5 h-3.5 text-blue-600" /> Emitimos Nota Fiscal
-                      </div>
-                    )}
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Ficha Técnica & Atributos Analisados pela IA:
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-slate-700">
+                    <div><strong className="text-slate-500">Marca:</strong> {selectedQuestion.productDetails.brand || 'ApexTech'}</div>
+                    <div><strong className="text-slate-500">Garantia:</strong> {selectedQuestion.productDetails.warranty || '12 meses'}</div>
+                    <div><strong className="text-slate-500">Tensão:</strong> {selectedQuestion.productDetails.voltage || 'Bivolt'}</div>
+                    <div><strong className="text-slate-500">Envio:</strong> Full Pronta Entrega</div>
+                    <div><strong className="text-slate-500">Nota Fiscal:</strong> CNPJ & CPF</div>
+                    <div><strong className="text-slate-500">Compatibilidade:</strong> {selectedQuestion.productDetails.compatibility || 'Universal'}</div>
                   </div>
                 </div>
               )}
 
               {/* Buyer Question Card */}
-              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center">
-                      {selectedQuestion.buyerName.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-gray-900">{selectedQuestion.buyerName}</p>
-                      <p className="text-[10px] text-gray-400">Comprador no Mercado Livre</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-gray-400">{formatDate(selectedQuestion.createdAt)}</span>
+              <div className="bg-amber-50/60 rounded-xl p-4 border border-amber-200/80 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-amber-900 flex items-center gap-1.5">
+                    <Info className="w-4 h-4 text-amber-600" />
+                    Pergunta do Comprador ({selectedQuestion.buyerName}):
+                  </span>
+                  <span className="text-amber-700 text-[11px]">{formatDate(selectedQuestion.createdAt)}</span>
                 </div>
-                <p className="text-sm text-gray-800 leading-relaxed pl-1 font-medium">
+                <p className="text-sm text-gray-900 font-medium leading-relaxed pl-1">
                   "{selectedQuestion.questionText}"
                 </p>
               </div>
 
-              {/* Seller Answer Section or Copilot Form */}
-              {selectedQuestion.status === 'answered' ? (
-                <div className="bg-emerald-50/70 rounded-2xl p-4 border border-emerald-200/80 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center">
-                        S
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-emerald-950">Apex Tech Direct (Resposta Enviada)</p>
-                        <p className="text-[10px] text-emerald-700">Vendedor Oficial</p>
-                      </div>
-                    </div>
-                    {selectedQuestion.answeredAt && (
-                      <span className="text-xs text-emerald-600">{formatDate(selectedQuestion.answeredAt)}</span>
-                    )}
+              {/* AI Copilot Draft Box */}
+              <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+                  <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                    <Sparkles className="w-4 h-4 text-blue-600" />
+                    <span>Copilot de Respostas com IA</span>
                   </div>
-                  <p className="text-sm text-gray-800 leading-relaxed pl-1 bg-white/70 p-3 rounded-xl border border-emerald-100">
-                    {selectedQuestion.answerText}
-                  </p>
-                </div>
-              ) : (
-                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200 space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
-                    <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
-                      <Sparkles className="w-4 h-4 text-blue-600" />
-                      <span>Copilot de Respostas com IA</span>
-                    </div>
 
-                    {/* AI Generation Trigger Button */}
+                  <button
+                    type="button"
+                    onClick={handleGenerateAiResponse}
+                    disabled={isGeneratingAi}
+                    className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-xs px-3.5 py-2 rounded-xl shadow-xs transition transform active:scale-95 disabled:opacity-50"
+                  >
+                    <Sparkles className={`w-3.5 h-3.5 ${isGeneratingAi ? 'animate-spin' : ''}`} />
+                    <span>{isGeneratingAi ? 'Analisando Ficha Técnica...' : 'Gerar Resposta com IA (1-Clique)'}</span>
+                  </button>
+                </div>
+
+                {/* Templates */}
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+                    Modelos Rápidos com 1 Toque:
+                  </span>
+                  <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={handleGenerateAiResponse}
-                      disabled={isGeneratingAi}
-                      className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-xs px-3.5 py-2 rounded-xl shadow-sm transition transform active:scale-95 disabled:opacity-50"
+                      onClick={() => handleApplyTemplate('pronta_entrega')}
+                      className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-700 transition"
                     >
-                      <Sparkles className={`w-3.5 h-3.5 ${isGeneratingAi ? 'animate-spin' : ''}`} />
-                      <span>{isGeneratingAi ? 'Analisando Atributos...' : 'Gerar Resposta com IA (1-Clique)'}</span>
+                      <Truck className="w-3 h-3 text-emerald-600" /> Tem pronta entrega?
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyTemplate('compatibilidade')}
+                      className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-700 transition"
+                    >
+                      <Zap className="w-3 h-3 text-blue-600" /> Compatibilidade
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyTemplate('nota_fiscal')}
+                      className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-700 transition"
+                    >
+                      <FileText className="w-3 h-3 text-purple-600" /> Emissão de NF
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyTemplate('garantia')}
+                      className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-700 transition"
+                    >
+                      <ShieldCheck className="w-3 h-3 text-amber-600" /> Garantia
                     </button>
                   </div>
+                </div>
 
-                  {/* Template Chips */}
-                  <div className="space-y-1.5">
-                    <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                      Modelos Rápidos de Resposta:
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleApplyTemplate('pronta_entrega')}
-                        className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-700 transition"
-                      >
-                        <Truck className="w-3 h-3 text-emerald-600" /> Tem pronta entrega?
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleApplyTemplate('compatibilidade')}
-                        className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-700 transition"
-                      >
-                        <Zap className="w-3 h-3 text-blue-600" /> Compatibilidade
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleApplyTemplate('nota_fiscal')}
-                        className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-700 transition"
-                      >
-                        <FileText className="w-3 h-3 text-purple-600" /> Emissão de NF
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleApplyTemplate('garantia')}
-                        className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-700 transition"
-                      >
-                        <ShieldCheck className="w-3 h-3 text-amber-600" /> Garantia
-                      </button>
-                    </div>
-                  </div>
+                {/* Editable Text Area */}
+                <div className="relative">
+                  <textarea
+                    rows={4}
+                    value={responseText}
+                    onChange={(e) => setResponseText(e.target.value)}
+                    placeholder="Sua resposta gerada pela IA aparecerá aqui. Você pode editar livremente antes de copiar..."
+                    className="w-full p-3.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none shadow-2xs"
+                  />
+                </div>
 
-                  {/* Editable Text Area */}
-                  <div className="relative">
-                    <textarea
-                      rows={4}
-                      value={responseText}
-                      onChange={(e) => setResponseText(e.target.value)}
-                      placeholder="Sua resposta editável aparecerá aqui. Você também pode digitar livremente..."
-                      className="w-full p-3.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none shadow-2xs"
-                    />
-                  </div>
+                {/* Actions Footer */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                  <span className="text-xs text-slate-400">
+                    {responseText.length} caracteres
+                  </span>
 
-                  {/* Actions Footer */}
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-xs text-slate-400">
-                      {responseText.length} caracteres
-                    </span>
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={handleSubmitAnswer}
+                      onClick={handleCopyAnswer}
                       disabled={!responseText.trim()}
-                      className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-xs transition"
+                      className={`inline-flex items-center gap-2 font-bold text-xs px-5 py-2.5 rounded-xl shadow-xs transition transform active:scale-95 ${
+                        copied
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed'
+                      }`}
                     >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>Enviar Resposta ao Comprador</span>
+                      {copied ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          <span>Copiado! Cole no Mercado Livre</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          <span>Copiar Resposta (1-Clique)</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleMarkAsAnsweredLocally}
+                      disabled={!responseText.trim()}
+                      className="px-3 py-2.5 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl text-xs font-semibold transition"
+                      title="Marcar como tratada na fila"
+                    >
+                      Marcar como Respondida
                     </button>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center text-gray-400">
-              Selecione uma pergunta da lista para visualizar os detalhes.
+              Selecione uma dúvida da lista para gerar e copiar a resposta.
             </div>
           )}
         </div>
