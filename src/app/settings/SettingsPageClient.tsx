@@ -5,21 +5,21 @@ import { useRouter } from 'next/navigation';
 import { Header } from '../../components/Header';
 import type { TabType } from '../../components/Header';
 import { SettingsPanel } from '../../components/SettingsPanel';
-import type { SettingsTab } from '../../components/SettingsPanel';
+import { SettingsProvider } from '../../context/SettingsContext';
 import { MOCK_QUESTIONS } from '../../data/mockData';
 
 interface SettingsPageProps {
-  initialSubTab?: SettingsTab;
+  initialSubTab?: 'api' | 'radar' | 'estimator' | 'pre-sales';
 }
 
-export function SettingsPageClient({ initialSubTab = 'api' }: SettingsPageProps) {
+function SettingsContent({ initialSubTab = 'api' }: SettingsPageProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('settings');
-  const [subTab, setSubTab] = useState<SettingsTab>(initialSubTab);
+  const [subTab, setSubTab] = useState<'api' | 'radar' | 'estimator' | 'pre-sales'>(initialSubTab);
 
   const unansweredCount = MOCK_QUESTIONS.filter((q) => q.status === 'unanswered').length;
 
-  const handleSubTabChange = (newSubTab: SettingsTab) => {
+  const handleSubTabChange = (newSubTab: 'api' | 'radar' | 'estimator' | 'pre-sales') => {
     setSubTab(newSubTab);
     router.push(`/settings/${newSubTab}`);
   };
@@ -47,9 +47,17 @@ export function SettingsPageClient({ initialSubTab = 'api' }: SettingsPageProps)
 
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4">
-          <p>© 2026 Apex Tech Direct Analytics Hub. All metrics and dashboards are for read-only evaluation.</p>
+          <p>© 2026 CoCreator ML Intelligence Hub &middot; Mercado Livre API Integration</p>
         </div>
       </footer>
     </div>
+  );
+}
+
+export function SettingsPageClient(props: SettingsPageProps) {
+  return (
+    <SettingsProvider>
+      <SettingsContent {...props} />
+    </SettingsProvider>
   );
 }

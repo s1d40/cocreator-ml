@@ -7,12 +7,24 @@ import { SellerMetrics } from './components/SellerMetrics';
 import { CompetitorRadar } from './components/CompetitorRadar';
 import { SalesEstimator } from './components/SalesEstimator';
 import { SettingsPanel } from './components/SettingsPanel';
+import { SettingsProvider, useSettings } from './context/SettingsContext';
 import { MOCK_QUESTIONS, MOCK_CAMPAIGNS, MOCK_DAILY_METRICS, MOCK_SELLER_REPUTATION, MOCK_COMPETITORS } from './data/mockData';
 
-export function App() {
+function DashboardContent() {
   const [activeTab, setActiveTab] = useState<TabType>('questions');
+  const { activeSeller, isApiConnected } = useSettings();
 
   const unansweredCount = MOCK_QUESTIONS.filter((q) => q.status === 'unanswered').length;
+
+  const sellerData = activeSeller
+    ? {
+        ...MOCK_SELLER_REPUTATION,
+        sellerName: activeSeller.nickname || MOCK_SELLER_REPUTATION.sellerName,
+        totalOrders: activeSeller.totalOrders || MOCK_SELLER_REPUTATION.totalOrders,
+        completedOrders: activeSeller.completedOrders || MOCK_SELLER_REPUTATION.completedOrders,
+        claimRate: activeSeller.claimRate || MOCK_SELLER_REPUTATION.claimRate,
+      }
+    : MOCK_SELLER_REPUTATION;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
@@ -39,7 +51,7 @@ export function App() {
         )}
 
         {activeTab === 'seller' && (
-          <SellerMetrics sellerData={MOCK_SELLER_REPUTATION} />
+          <SellerMetrics sellerData={sellerData} />
         )}
 
         {activeTab === 'competitor' && (
@@ -53,10 +65,18 @@ export function App() {
 
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4">
-          <p>© 2026 Apex Tech Direct Analytics Hub. All metrics and dashboards are for read-only evaluation.</p>
+          <p>© 2026 CoCreator ML Intelligence Hub &middot; Mercado Livre API Integration &middot; All rights reserved.</p>
         </div>
       </footer>
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <SettingsProvider>
+      <DashboardContent />
+    </SettingsProvider>
   );
 }
 

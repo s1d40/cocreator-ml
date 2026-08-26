@@ -1,8 +1,41 @@
+export interface MlSellerAccountInfo {
+  id?: number | string;
+  nickname?: string;
+  email?: string;
+  countryId?: string;
+  siteId?: string;
+  reputationLevel?: string;
+  powerSellerStatus?: string;
+  permalink?: string;
+  totalOrders?: number;
+  completedOrders?: number;
+  claimRate?: number;
+  sellerReputation?: {
+    level_id?: string;
+    power_seller_status?: string;
+    transactions?: {
+      completed?: number;
+      canceled?: number;
+      period?: string;
+      total?: number;
+      ratings?: {
+        positive?: number;
+        negative?: number;
+        neutral?: number;
+      };
+    };
+  };
+}
+
 export interface MlApiSettings {
+  appId?: string;
+  clientSecret?: string;
   accessToken: string;
-  connectionStatus: 'connected' | 'expired' | 'simulation';
+  connectionStatus: 'connected' | 'expired' | 'simulation' | 'unconfigured';
   readOnlyMode: boolean;
   lastTestedAt?: string;
+  accountInfo?: MlSellerAccountInfo;
+  errorMessage?: string;
 }
 
 export interface MonitoredCompetitor {
@@ -47,10 +80,12 @@ export interface AppSettings {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   api: {
-    accessToken: 'APP_USR-7829104829104829-082614-b38f2910482910482910482910482910-1049281',
-    connectionStatus: 'connected',
+    appId: '',
+    clientSecret: '',
+    accessToken: '',
+    connectionStatus: 'unconfigured',
     readOnlyMode: true,
-    lastTestedAt: '2026-08-26T12:00:00Z',
+    lastTestedAt: undefined,
   },
   radar: {
     scanInterval: '1h',
