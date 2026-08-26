@@ -1,121 +1,155 @@
 import { CompetitorItem } from '../types/competitor';
 
+export interface QuestionProductDetails {
+  brand?: string;
+  model?: string;
+  voltage?: string;
+  warranty?: string;
+  inStock?: boolean;
+  fullShipping?: boolean;
+  invoiceProvided?: boolean;
+  compatibility?: string;
+  attributes?: Record<string, string>;
+}
+
 export interface Question {
   id: string;
   buyerName: string;
   buyerAvatar?: string;
   productTitle: string;
   productImage: string;
+  productMlId?: string;
   questionText: string;
   createdAt: string;
   status: 'unanswered' | 'answered';
   answerText?: string;
   answeredAt?: string;
   category: string;
-}
-
-export interface AdCampaign {
-  id: string;
-  name: string;
-  status: 'active' | 'paused' | 'ended';
-  budget: number;
-  spent: number;
-  impressions: number;
-  clicks: number;
-  ctr: number; // percentage
-  conversions: number;
-  conversionRate: number; // percentage
-  sales: number;
-  acos: number; // Advertising Cost of Sales percentage
-}
-
-export interface AdDailyMetric {
-  date: string;
-  impressions: number;
-  clicks: number;
-  spend: number;
-  sales: number;
-}
-
-export interface SellerReputation {
-  sellerName: string;
-  level: string;
-  reputationScore: number; // e.g., 98.4%
-  totalOrders: number;
-  completedOrders: number;
-  canceledOrdersBySeller: number;
-  claimRate: number; // percentage
-  responseTimeHours: number;
-  responseRate: number; // percentage
-  ratingBreakdown: {
-    stars: number;
-    count: number;
-    percentage: number;
-  }[];
-  monthlyPerformance: {
-    month: string;
-    score: number;
-    salesCount: number;
-    claimCount: number;
-  }[];
+  productDetails?: QuestionProductDetails;
 }
 
 export const MOCK_QUESTIONS: Question[] = [
   {
     id: 'q-101',
     buyerName: 'Alex Morgan',
-    productTitle: 'Ergonomic Wireless Mechanical Keyboard (RGB Backlit)',
+    productTitle: 'Teclado Mecânico Ergonômico Sem Fio (RGB Backlit)',
+    productMlId: 'MLB-1002341',
     productImage: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=150&q=80',
-    questionText: 'Is this keyboard compatible with macOS out of the box, including keybindings?',
-    createdAt: '2026-08-25T14:30:00Z',
+    questionText: 'Este teclado é compatível com macOS nativamente, incluindo os atalhos de mídia?',
+    createdAt: new Date(Date.now() - 8 * 60 * 1000).toISOString(), // 8 minutes ago
     status: 'unanswered',
-    category: 'Compatibility',
+    category: 'Compatibilidade',
+    productDetails: {
+      brand: 'ApexTech',
+      model: 'K-950 Wireless',
+      voltage: 'Bivolt Automático (Recarregável via USB-C)',
+      warranty: '12 meses de garantia oficial',
+      inStock: true,
+      fullShipping: true,
+      invoiceProvided: true,
+      compatibility: 'Windows, macOS, Linux, iOS e Android (Bluetooth 5.1 / Dongle 2.4Ghz)',
+      attributes: {
+        'Conexão': 'Bluetooth 5.1 / 2.4GHz / USB-C',
+        'Bateria': '4000mAh (Até 200h sem RGB)',
+        'Switches': 'Gateron Pro Yellow Hot-Swappable',
+      },
+    },
   },
   {
     id: 'q-102',
     buyerName: 'Samantha Lee',
-    productTitle: 'Ultra Wide 34-inch Curved Gaming Monitor 144Hz',
+    productTitle: 'Monitor Gamer Ultrawide 34" Curvo 144Hz 1ms',
+    productMlId: 'MLB-2005819',
     productImage: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=150&q=80',
-    questionText: 'Does the package include a DisplayPort cable or only HDMI?',
-    createdAt: '2026-08-25T11:15:00Z',
+    questionText: 'Vem com cabo DisplayPort na caixa ou apenas HDMI? Emite nota fiscal para CNPJ?',
+    createdAt: new Date(Date.now() - 42 * 60 * 1000).toISOString(), // 42 minutes ago
     status: 'unanswered',
-    category: 'Package Content',
+    category: 'Conteúdo da Embalagem & NF',
+    productDetails: {
+      brand: 'ApexTech',
+      model: 'Vision34X',
+      voltage: '110V/220V (Bivolt automático)',
+      warranty: '12 meses com fabricante',
+      inStock: true,
+      fullShipping: true,
+      invoiceProvided: true,
+      compatibility: 'PC, Mac, PS5, Xbox Series X (DisplayPort 1.4 / HDMI 2.0)',
+      attributes: {
+        'Conteúdo da Caixa': 'Monitor 34", Fonte de Alimentação, Cabo DisplayPort 1.4, Cabo HDMI 2.0 e Manual',
+        'Resolução': '3440 x 1440 UWQHD',
+        'Painel': 'VA Curvo 1500R',
+      },
+    },
   },
   {
     id: 'q-103',
     buyerName: 'David Chen',
-    productTitle: 'Noise-Canceling Wireless Over-Ear Headphones',
+    productTitle: 'Fone de Ouvido Bluetooth com Cancelamento de Ruído (ANC)',
+    productMlId: 'MLB-3094812',
     productImage: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=150&q=80',
-    questionText: 'How long does the battery last with Active Noise Cancellation (ANC) switched on constantly?',
+    questionText: 'Quanto tempo dura a bateria com o Cancelamento de Ruído (ANC) ativado continuamente?',
     createdAt: '2026-08-24T18:45:00Z',
     status: 'answered',
-    answerText: 'Hi David! The battery lasts up to 30 hours continuously with ANC enabled, and up to 40 hours with ANC turned off.',
+    answerText: 'Olá David! A bateria dura até 30 horas contínuas com o ANC ligado, e até 40 horas com o ANC desligado. Além disso, conta com carregamento rápido via USB-C!',
     answeredAt: '2026-08-24T19:20:00Z',
-    category: 'Specifications',
+    category: 'Especificações',
+    productDetails: {
+      brand: 'ApexTech',
+      model: 'SilencePro 500',
+      voltage: '5V USB-C',
+      warranty: '6 meses',
+      inStock: true,
+      fullShipping: true,
+      invoiceProvided: true,
+      compatibility: 'Universal Bluetooth 5.2',
+    },
   },
   {
     id: 'q-104',
     buyerName: 'Elena Rostova',
-    productTitle: 'USB-C Docking Station Dual 4K Display',
+    productTitle: 'Docking Station USB-C Dual 4K Display Power Delivery 100W',
+    productMlId: 'MLB-4018239',
     productImage: 'https://images.unsplash.com/photo-1544652478-6653e09f18a2?auto=format&fit=crop&w=150&q=80',
-    questionText: 'Can this dock deliver at least 85W power delivery to charge a 16-inch MacBook Pro?',
-    createdAt: '2026-08-24T09:10:00Z',
-    status: 'answered',
-    answerText: 'Yes Elena! It supports up to 100W Power Delivery (PD 3.0), which comfortably powers a 16-inch MBP.',
-    answeredAt: '2026-08-24T10:05:00Z',
-    category: 'Power & Charging',
+    questionText: 'Tem pronta entrega no envio Full? Consegue carregar um MacBook Pro de 16 polegadas?',
+    createdAt: new Date(Date.now() - 125 * 60 * 1000).toISOString(), // 2h 5m ago
+    status: 'unanswered',
+    category: 'Pronta Entrega & Energia',
+    productDetails: {
+      brand: 'ApexTech',
+      model: 'DockMax Dual 4K',
+      voltage: '100W PD 3.0 Passthrough',
+      warranty: '12 meses',
+      inStock: true,
+      fullShipping: true,
+      invoiceProvided: true,
+      compatibility: 'MacBook Pro/Air M1/M2/M3, Windows Laptops com Thunderbolt 3/4 ou USB-C 3.2 Gen2',
+      attributes: {
+        'Saída de Energia': 'Até 100W Power Delivery',
+        'Portas': '2x HDMI 4K@60Hz, 1x DisplayPort, 3x USB-A 3.1, 1x USB-C Data, Gigabit Ethernet',
+      },
+    },
   },
   {
     id: 'q-105',
     buyerName: 'Marcus Vance',
-    productTitle: 'Ergonomic Wireless Mechanical Keyboard (RGB Backlit)',
+    productTitle: 'Teclado Mecânico Ergonômico Sem Fio (RGB Backlit)',
+    productMlId: 'MLB-1002341',
     productImage: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=150&q=80',
-    questionText: 'Are the switches hot-swappable or soldered onto the PCB?',
+    questionText: 'Os switches são hot-swappable ou soldados na placa?',
     createdAt: '2026-08-23T16:00:00Z',
     status: 'answered',
-    answerText: 'Hello Marcus, the switches are 5-pin hot-swappable, so you can easily swap Cherry MX, Gateron, or Kailh switches.',
+    answerText: 'Olá Marcus, os switches são hot-swappable de 5 pinos, permitindo trocar facilmente por switches Cherry MX, Gateron ou Kailh sem necessidade de solda.',
     answeredAt: '2026-08-23T16:45:00Z',
-    category: 'Specifications',
+    category: 'Especificações',
+    productDetails: {
+      brand: 'ApexTech',
+      model: 'K-950 Wireless',
+      voltage: 'Bivolt Automático',
+      warranty: '12 meses',
+      inStock: true,
+      fullShipping: true,
+      invoiceProvided: true,
+    },
   },
 ];
 
@@ -214,7 +248,6 @@ export const MOCK_SELLER_REPUTATION: SellerReputation = {
     { month: 'Aug', score: 98.6, salesCount: 800, claimCount: 1 },
   ],
 };
-<<<<<<< HEAD
 
 export const MOCK_COMPETITORS: CompetitorItem[] = [
   {

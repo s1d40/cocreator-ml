@@ -6,6 +6,7 @@ import { AdsPerformance } from './components/AdsPerformance';
 import { SellerMetrics } from './components/SellerMetrics';
 import { CompetitorRadar } from './components/CompetitorRadar';
 import { SalesEstimator } from './components/SalesEstimator';
+import { SettingsPanel } from './components/SettingsPanel';
 import { MOCK_QUESTIONS, MOCK_CAMPAIGNS, MOCK_DAILY_METRICS, MOCK_SELLER_REPUTATION, MOCK_COMPETITORS } from './data/mockData';
 
 export function App() {
@@ -43,6 +44,10 @@ export function App() {
 
         {activeTab === 'competitor' && (
           <CompetitorRadar initialCompetitors={MOCK_COMPETITORS} />
+        )}
+
+        {activeTab === 'settings' && (
+          <SettingsPanel />
         )}
       </main>
 

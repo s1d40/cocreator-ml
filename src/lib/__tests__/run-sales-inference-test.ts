@@ -1,10 +1,12 @@
-const assert = require('assert');
-const {
+import assert from 'assert';
+import {
   parseStockRangeValue,
   calculateZipfRankingWeight,
   calculateStockTransitionDelta,
   calculateEstimatedSales,
-} = require('../sales-inference.ts');
+  ItemData,
+  StockSnapshot,
+} from '../sales-inference';
 
 console.log('Running Sales Inference Engine unit tests...');
 
@@ -27,8 +29,8 @@ assert.strictEqual(calculateZipfRankingWeight(0), 0.5);
 console.log('✓ calculateZipfRankingWeight tests passed');
 
 // 3. calculateStockTransitionDelta
-const itemDataDelta = { mlbId: 'MLB123', price: 100 };
-const snapshotsDelta = [
+const itemDataDelta: ItemData = { mlbId: 'MLB123', price: 100 };
+const snapshotsDelta: StockSnapshot[] = [
   { timestamp: '2026-08-01T00:00:00Z', stockRange: 'RANGO_26_50', availableQuantity: 40, price: 100 },
   { timestamp: '2026-08-03T00:00:00Z', stockRange: 'RANGO_6_25', availableQuantity: 20, price: 100 },
 ];
@@ -39,7 +41,7 @@ assert.strictEqual(resultDelta.estimatedDailyUnits, 10);
 console.log('✓ calculateStockTransitionDelta tests passed');
 
 // 4. calculateEstimatedSales
-const itemData = {
+const itemData: ItemData = {
   mlbId: 'MLB987654321',
   title: 'Smartphone Flagship 256GB',
   price: 2500,
@@ -47,7 +49,7 @@ const itemData = {
   totalCategoryItems: 50,
 };
 
-const snapshots = [
+const snapshots: StockSnapshot[] = [
   {
     timestamp: '2026-08-01T00:00:00Z',
     stockRange: 'RANGO_26_50',
@@ -77,4 +79,4 @@ assert.strictEqual(estimate.indicators.questionVelocityScore, 2);
 assert.strictEqual(estimate.indicators.reviewVelocityScore, 0.6);
 console.log('✓ calculateEstimatedSales tests passed');
 
-console.log('ALL TESTS PASSED SUCCESSFULLY!');
+console.log('ALL SALES INFERENCE TESTS PASSED SUCCESSFULLY!');
