@@ -17,8 +17,17 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  Truck
+  Truck,
+  Radar,
+  HelpCircle,
+  BarChart3,
+  Award
 } from 'lucide-react';
+import { CompetitorRadar } from '@/components/CompetitorRadar';
+import { QuestionsInbox } from '@/components/QuestionsInbox';
+import { AdsPerformance } from '@/components/AdsPerformance';
+import { SellerMetrics } from '@/components/SellerMetrics';
+import { MOCK_COMPETITORS, MOCK_QUESTIONS, MOCK_CAMPAIGNS, MOCK_DAILY_METRICS, MOCK_SELLER_REPUTATION } from '@/data/mockData';
 import {
   AreaChart,
   Area,
@@ -80,6 +89,7 @@ interface MLOrder {
 const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6'];
 
 export default function Dashboard() {
+  const [activeTab, setActiveTab] = useState<'sales' | 'competitor' | 'questions' | 'ads' | 'seller'>('sales');
   const [orders, setOrders] = useState<MLOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [dataSource, setDataSource] = useState<'live' | 'mock'>('mock');
@@ -318,6 +328,69 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Main navigation tabs */}
+          <nav className="hidden lg:flex space-x-1 bg-slate-100 p-1 rounded-xl">
+            <button
+              onClick={() => setActiveTab('sales')}
+              className={`flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                activeTab === 'sales'
+                  ? 'bg-white text-blue-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
+              <span>Sales Dashboard</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('competitor')}
+              className={`flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                activeTab === 'competitor'
+                  ? 'bg-white text-blue-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <Radar className="w-3.5 h-3.5 mr-1.5" />
+              <span>Competitor Radar</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('questions')}
+              className={`flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                activeTab === 'questions'
+                  ? 'bg-white text-blue-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <HelpCircle className="w-3.5 h-3.5 mr-1.5" />
+              <span>Questions</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('ads')}
+              className={`flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                activeTab === 'ads'
+                  ? 'bg-white text-blue-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <BarChart3 className="w-3.5 h-3.5 mr-1.5" />
+              <span>Ads</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('seller')}
+              className={`flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                activeTab === 'seller'
+                  ? 'bg-white text-blue-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <Award className="w-3.5 h-3.5 mr-1.5" />
+              <span>Seller Metrics</span>
+            </button>
+          </nav>
+
           <div className="flex items-center gap-3">
             <span
               className={`text-xs px-2.5 py-1 rounded-full font-medium ${
@@ -351,7 +424,39 @@ export default function Dashboard() {
 
       {/* Main Content Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
-        {/* Token Modal */}
+        {/* Mobile Navigation Dropdown */}
+        <div className="block lg:hidden bg-white p-2 rounded-xl border border-slate-200">
+          <select
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value as any)}
+            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-800"
+          >
+            <option value="sales">🛍️ Sales Dashboard</option>
+            <option value="competitor">🎯 Competitor Radar &amp; Buy Box</option>
+            <option value="questions">❓ Questions Inbox</option>
+            <option value="ads">📊 Ads Performance</option>
+            <option value="seller">🏆 Seller Metrics</option>
+          </select>
+        </div>
+
+        {activeTab === 'competitor' && (
+          <CompetitorRadar initialCompetitors={MOCK_COMPETITORS} />
+        )}
+
+        {activeTab === 'questions' && (
+          <QuestionsInbox questions={MOCK_QUESTIONS} />
+        )}
+
+        {activeTab === 'ads' && (
+          <AdsPerformance campaigns={MOCK_CAMPAIGNS} dailyMetrics={MOCK_DAILY_METRICS} />
+        )}
+
+        {activeTab === 'seller' && (
+          <SellerMetrics sellerData={MOCK_SELLER_REPUTATION} />
+        )}
+
+        {activeTab === 'sales' && (
+          <>
         {showTokenModal && (
           <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative">
@@ -700,6 +805,8 @@ export default function Dashboard() {
             </div>
           )}
         </section>
+        </>
+        )}
       </main>
 
       {/* Order Detail Modal */}

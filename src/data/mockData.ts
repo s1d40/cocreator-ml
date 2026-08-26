@@ -1,3 +1,5 @@
+import { CompetitorItem } from '../types/competitor';
+
 export interface Question {
   id: string;
   buyerName: string;
@@ -212,3 +214,89 @@ export const MOCK_SELLER_REPUTATION: SellerReputation = {
     { month: 'Aug', score: 98.6, salesCount: 800, claimCount: 1 },
   ],
 };
+
+export const MOCK_COMPETITORS: CompetitorItem[] = [
+  {
+    id: 'comp-1',
+    mlbId: 'MLB3849102834',
+    title: 'Teclado Mecânico RGB Wireless Ergônomico Switch Red',
+    sellerNickname: 'TECH_GURU_STORE',
+    sellerReputation: 'platinum',
+    price: 349.90,
+    originalPrice: 399.90,
+    listingType: 'gold_pro',
+    shippingType: 'fulfillment',
+    buyBoxStatus: 'winning',
+    thumbnail: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=150&q=80',
+    stockRange: 'RANGO_26_50',
+    lastUpdated: '2026-08-25T16:45:00Z',
+    priceHistory: [
+      { date: '19 Aug', price: 389.90 },
+      { date: '21 Aug', price: 379.90 },
+      { date: '23 Aug', price: 359.90 },
+      { date: '25 Aug', price: 349.90 },
+    ],
+  },
+  {
+    id: 'comp-2',
+    mlbId: 'MLB2918471029',
+    title: 'Monitor Gamer Curved 34-inch 144Hz 1ms UltraWide QHD',
+    sellerNickname: 'ELECTRO_WORLD_BR',
+    sellerReputation: 'gold',
+    price: 1899.00,
+    originalPrice: 2199.00,
+    listingType: 'gold_special',
+    shippingType: 'cross_docking',
+    buyBoxStatus: 'competing',
+    thumbnail: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=150&q=80',
+    stockRange: 'RANGO_6_25',
+    lastUpdated: '2026-08-25T14:20:00Z',
+    priceHistory: [
+      { date: '19 Aug', price: 1799.00 },
+      { date: '21 Aug', price: 1849.00 },
+      { date: '23 Aug', price: 1899.00 },
+      { date: '25 Aug', price: 1899.00 },
+    ],
+  },
+  {
+    id: 'comp-3',
+    mlbId: 'MLB1029384756',
+    title: 'Fone de Ouvido Bluetooth ANC Sem Fio Over-Ear 30h Bateria',
+    sellerNickname: 'AUDIO_PRO_SHOP',
+    sellerReputation: 'leader',
+    price: 289.00,
+    originalPrice: 299.00,
+    listingType: 'gold_pro',
+    shippingType: 'fulfillment',
+    buyBoxStatus: 'lost',
+    thumbnail: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=150&q=80',
+    stockRange: 'RANGO_51_100',
+    lastUpdated: '2026-08-25T18:10:00Z',
+    priceHistory: [
+      { date: '19 Aug', price: 319.00 },
+      { date: '21 Aug', price: 299.00 },
+      { date: '23 Aug', price: 295.00 },
+      { date: '25 Aug', price: 289.00 },
+    ],
+  },
+  {
+    id: 'comp-4',
+    mlbId: 'MLB9483726150',
+    title: 'Docking Station USB-C Dual 4K HDMI 100W Power Delivery',
+    sellerNickname: 'HUB_DIRECT_OFFICIAL',
+    sellerReputation: 'none',
+    price: 459.99,
+    listingType: 'gold_special',
+    shippingType: 'self_service',
+    buyBoxStatus: 'not_applicable',
+    thumbnail: 'https://images.unsplash.com/photo-1544652478-6653e09f18a2?auto=format&fit=crop&w=150&q=80',
+    stockRange: 'RANGO_1_5',
+    lastUpdated: '2026-08-24T12:00:00Z',
+    priceHistory: [
+      { date: '19 Aug', price: 459.99 },
+      { date: '21 Aug', price: 459.99 },
+      { date: '23 Aug', price: 459.99 },
+      { date: '25 Aug', price: 459.99 },
+    ],
+  },
+];

@@ -4,7 +4,8 @@ import type { TabType } from './components/Header';
 import { QuestionsInbox } from './components/QuestionsInbox';
 import { AdsPerformance } from './components/AdsPerformance';
 import { SellerMetrics } from './components/SellerMetrics';
-import { MOCK_QUESTIONS, MOCK_CAMPAIGNS, MOCK_DAILY_METRICS, MOCK_SELLER_REPUTATION } from './data/mockData';
+import { CompetitorRadar } from './components/CompetitorRadar';
+import { MOCK_QUESTIONS, MOCK_CAMPAIGNS, MOCK_DAILY_METRICS, MOCK_SELLER_REPUTATION, MOCK_COMPETITORS } from './data/mockData';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabType>('questions');
@@ -33,6 +34,10 @@ export function App() {
 
         {activeTab === 'seller' && (
           <SellerMetrics sellerData={MOCK_SELLER_REPUTATION} />
+        )}
+
+        {activeTab === 'competitor' && (
+          <CompetitorRadar initialCompetitors={MOCK_COMPETITORS} />
         )}
       </main>
 

@@ -1,8 +1,8 @@
 import React from 'react';
-import { HelpCircle, BarChart3, Award, Store } from 'lucide-react';
+import { HelpCircle, BarChart3, Award, Store, Radar } from 'lucide-react';
 import { ReadOnlyBadge } from './ReadOnlyBadge';
 
-export type TabType = 'questions' | 'ads' | 'seller';
+export type TabType = 'questions' | 'ads' | 'seller' | 'competitor';
 
 interface HeaderProps {
   activeTab: TabType;
@@ -67,6 +67,18 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, unanswe
             >
               <Award className="w-4 h-4 mr-2" />
               <span>Seller Metrics</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('competitor')}
+              className={`flex items-center px-3 sm:px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === 'competitor'
+                  ? 'bg-white text-blue-700 shadow-xs'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
+              }`}
+            >
+              <Radar className="w-4 h-4 mr-2" />
+              <span>Competitor Radar</span>
             </button>
           </nav>
 
