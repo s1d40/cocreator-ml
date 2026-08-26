@@ -5,6 +5,7 @@ import { QuestionsInbox } from './components/QuestionsInbox';
 import { AdsPerformance } from './components/AdsPerformance';
 import { SellerMetrics } from './components/SellerMetrics';
 import { CompetitorRadar } from './components/CompetitorRadar';
+import { SalesEstimator } from './components/SalesEstimator';
 import { MOCK_QUESTIONS, MOCK_CAMPAIGNS, MOCK_DAILY_METRICS, MOCK_SELLER_REPUTATION, MOCK_COMPETITORS } from './data/mockData';
 
 export function App() {
@@ -30,6 +31,10 @@ export function App() {
             campaigns={MOCK_CAMPAIGNS}
             dailyMetrics={MOCK_DAILY_METRICS}
           />
+        )}
+
+        {activeTab === 'estimator' && (
+          <SalesEstimator />
         )}
 
         {activeTab === 'seller' && (

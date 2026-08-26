@@ -214,6 +214,7 @@ export const MOCK_SELLER_REPUTATION: SellerReputation = {
     { month: 'Aug', score: 98.6, salesCount: 800, claimCount: 1 },
   ],
 };
+<<<<<<< HEAD
 
 export const MOCK_COMPETITORS: CompetitorItem[] = [
   {
