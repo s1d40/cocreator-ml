@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "site": "cocreator-ml",
+    "public": "out",
+    "ignore": [
+      "firebase.json",
+      "**/.*"
+    ]
+  }
+}
