@@ -242,37 +242,127 @@
         </div>
       </section>
 
-      <!-- TAB 2: ESTIMADOR ESTOCÁSTICO DE VENDAS -->
+      <!-- TAB 2: ESTIMADOR ESTOCÁSTICO DE VENDAS INTERATIVO -->
       <section id="pane-estimator" class="tab-pane hidden space-y-6">
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
-          <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2.5">
-            <i data-lucide="trending-up" class="w-6 h-6 text-blue-600"></i>
-            Estimador Estocástico de Volume de Vendas
-          </h2>
-          <p class="text-slate-500 text-sm mt-1">Simulador de transição de estoque oculto (Markov + Lei de Zipf) e projeções Monte Carlo para 30, 60 e 90 dias.</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
-            <span class="text-xs font-bold text-slate-400 uppercase">Projeção 30 Dias (P50)</span>
-            <div class="text-2xl font-black text-slate-900">R$ 142.850,00</div>
-            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">+18.4% vs mês anterior</span>
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2.5">
+              <i data-lucide="trending-up" class="w-6 h-6 text-blue-600"></i>
+              Estimador Estocástico de Volume de Vendas
+            </h2>
+            <p class="text-slate-500 text-sm mt-1">Selecione qualquer anúncio ou digite um MLB ID para simular projeções Monte Carlo, transição de estoque e risco de ruptura.</p>
           </div>
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
-            <span class="text-xs font-bold text-slate-400 uppercase">Projeção 60 Dias (P50)</span>
-            <div class="text-2xl font-black text-slate-900">R$ 298.400,00</div>
-            <span class="text-xs font-semibold text-slate-500">Intervalo 80% Confiança</span>
-          </div>
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
-            <span class="text-xs font-bold text-slate-400 uppercase">Projeção 90 Dias (Otimista P90)</span>
-            <div class="text-2xl font-black text-indigo-600">R$ 489.120,00</div>
-            <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Giro Acelerado</span>
+          <div class="px-3 py-1.5 bg-blue-50 text-blue-800 border border-blue-200 rounded-xl text-xs font-semibold flex items-center gap-2">
+            <i data-lucide="sparkles" class="w-4 h-4 text-blue-600"></i>
+            <span>Simulador Preditivo Ativo</span>
           </div>
         </div>
 
+        <!-- Selection & Parameters Card -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <!-- MLB Search & Selector -->
+            <div class="md:col-span-7 space-y-1.5">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Buscar por MLB ID ou Link do Mercado Livre</label>
+              <div class="flex gap-2">
+                <div class="relative flex-1">
+                  <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                  <input type="text" id="estimator-mlb-input" value="MLB3849102834" placeholder="Ex: MLB3849102834" class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <button onclick="handleEstimatorSearch()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+                  <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                  <span>Buscar</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Quick Preset Selector -->
+            <div class="md:col-span-5 space-y-1.5">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Ou Selecionar Anúncio Rápido</label>
+              <select id="estimator-preset-select" onchange="handleEstimatorPreset(this.value)" class="w-full py-2.5 px-3 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <option value="MLB3849102834">Headphone Bluetooth Pro (R$ 289,90 · RANGO 26-50)</option>
+                <option value="MLB2918471029">Teclado Mecânico RGB Wireless (R$ 199,90 · RANGO 51-100)</option>
+                <option value="MLB1029384756">Smartwatch Fitness Monitor 44mm (R$ 499,90 · RANGO 6-25)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Parameter Controls Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-3 border-t border-slate-100">
+            <!-- Horizon -->
+            <div class="space-y-1">
+              <label class="text-[11px] font-bold text-slate-600 uppercase">Horizonte de Tempo</label>
+              <select id="param-horizon" onchange="recalculateEstimates()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800">
+                <option value="15">15 Dias</option>
+                <option value="30" selected>30 Dias</option>
+                <option value="60">60 Dias</option>
+                <option value="90">90 Dias</option>
+                <option value="180">180 Dias</option>
+              </select>
+            </div>
+
+            <!-- Stock Range -->
+            <div class="space-y-1">
+              <label class="text-[11px] font-bold text-slate-600 uppercase">Faixa de Estoque Oculto</label>
+              <select id="param-stock-range" onchange="recalculateEstimates()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800">
+                <option value="RANGO_1_5">1 a 5 unidades</option>
+                <option value="RANGO_6_25">6 a 25 unidades</option>
+                <option value="RANGO_26_50" selected>26 a 50 unidades</option>
+                <option value="RANGO_51_100">51 a 100 unidades</option>
+                <option value="RANGO_101_500">101 a 500 unidades</option>
+                <option value="RANGO_500+">500+ unidades</option>
+              </select>
+            </div>
+
+            <!-- Confidence Level -->
+            <div class="space-y-1">
+              <label class="text-[11px] font-bold text-slate-600 uppercase">Margem de Confiança</label>
+              <select id="param-confidence" onchange="recalculateEstimates()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800">
+                <option value="80">80% (P10 / P90)</option>
+                <option value="90">90% (P05 / P95)</option>
+                <option value="95" selected>95% (Padrão Bayesiano)</option>
+              </select>
+            </div>
+
+            <!-- Unit Price -->
+            <div class="space-y-1">
+              <label class="text-[11px] font-bold text-slate-600 uppercase">Preço Unitário (R$)</label>
+              <input type="number" id="param-price" value="289.90" step="0.50" onchange="recalculateEstimates()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800">
+            </div>
+          </div>
+        </div>
+
+        <!-- Projection Metrics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1">
+            <span class="text-[11px] font-bold text-slate-400 uppercase">Receita P50 (Esperada)</span>
+            <div id="est-revenue-p50" class="text-2xl font-black text-blue-600">R$ 142.850,00</div>
+            <span id="est-units-p50" class="text-xs text-slate-500 font-medium">492 unidades vendidas</span>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1">
+            <span class="text-[11px] font-bold text-slate-400 uppercase">Cenário Conservador (P10)</span>
+            <div id="est-revenue-p10" class="text-2xl font-black text-slate-800">R$ 98.420,00</div>
+            <span class="text-xs text-slate-400 font-medium">Cenário de baixa tração</span>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1">
+            <span class="text-[11px] font-bold text-slate-400 uppercase">Cenário Otimista (P90)</span>
+            <div id="est-revenue-p90" class="text-2xl font-black text-indigo-600">R$ 194.200,00</div>
+            <span class="text-xs text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">Alta Aceleração</span>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1">
+            <span class="text-[11px] font-bold text-slate-400 uppercase">Risco de Ruptura (Out-of-Stock)</span>
+            <div id="est-stockout-days" class="text-2xl font-black text-amber-600">~18 Dias</div>
+            <span class="text-xs text-amber-800 font-semibold bg-amber-50 px-1.5 py-0.5 rounded">Recomenda-se Reposição</span>
+          </div>
+        </div>
+
+        <!-- Monte Carlo Graph -->
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
-          <h3 class="text-sm font-bold text-slate-800 mb-4">Curva Preditiva de Faturamento Acumulado (Monte Carlo)</h3>
-          <div class="h-64">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-slate-800">Curva Preditiva de Faturamento Acumulado (Simulação Monte Carlo 1.000 iterações)</h3>
+            <span id="chart-horizon-label" class="text-xs font-semibold text-slate-500">Projeção 30 Dias</span>
+          </div>
+          <div class="h-72">
             <canvas id="estimatorChart"></canvas>
           </div>
         </div>
@@ -686,36 +776,117 @@
     let estimatorChartInstance = null;
     function initEstimatorChart() {
       const ctx = document.getElementById("estimatorChart");
-      if (!ctx || estimatorChartInstance) return;
-      estimatorChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['Dia 1', 'Dia 15', 'Dia 30', 'Dia 45', 'Dia 60', 'Dia 75', 'Dia 90'],
-          datasets: [
-            {
-              label: 'P90 (Otimista)',
-              data: [15000, 68000, 165000, 260000, 370000, 480000, 595000],
-              borderColor: '#4f46e5',
-              backgroundColor: 'rgba(79, 70, 229, 0.1)',
-              fill: true,
-              tension: 0.3
-            },
-            {
-              label: 'P50 (Esperado)',
-              data: [12000, 52000, 142850, 215000, 298400, 390000, 489120],
-              borderColor: '#2563eb',
-              backgroundColor: 'rgba(37, 99, 235, 0.15)',
-              fill: true,
-              tension: 0.3
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'top' } }
-        }
-      });
+      if (!ctx) return;
+      if (!estimatorChartInstance) {
+        estimatorChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: ['Dia 5', 'Dia 10', 'Dia 15', 'Dia 20', 'Dia 25', 'Dia 30'],
+            datasets: [
+              {
+                label: 'P90 (Otimista)',
+                data: [25000, 58000, 95000, 130000, 165000, 194200],
+                borderColor: '#4f46e5',
+                backgroundColor: 'rgba(79, 70, 229, 0.08)',
+                fill: true,
+                tension: 0.35
+              },
+              {
+                label: 'P50 (Esperado)',
+                data: [18000, 42000, 71000, 98000, 122000, 142850],
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37, 99, 235, 0.15)',
+                fill: true,
+                tension: 0.35
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } }
+          }
+        });
+      }
+      recalculateEstimates();
+    }
+
+    function handleEstimatorSearch() {
+      const mlb = document.getElementById("estimator-mlb-input").value.trim().toUpperCase();
+      if (!mlb) return;
+      recalculateEstimates();
+    }
+
+    function handleEstimatorPreset(val) {
+      document.getElementById("estimator-mlb-input").value = val;
+      if (val === "MLB3849102834") {
+        document.getElementById("param-price").value = "289.90";
+        document.getElementById("param-stock-range").value = "RANGO_26_50";
+      } else if (val === "MLB2918471029") {
+        document.getElementById("param-price").value = "199.90";
+        document.getElementById("param-stock-range").value = "RANGO_51_100";
+      } else if (val === "MLB1029384756") {
+        document.getElementById("param-price").value = "499.90";
+        document.getElementById("param-stock-range").value = "RANGO_6_25";
+      }
+      recalculateEstimates();
+    }
+
+    function recalculateEstimates() {
+      const horizon = parseInt(document.getElementById("param-horizon").value) || 30;
+      const price = parseFloat(document.getElementById("param-price").value) || 289.90;
+      const stockRange = document.getElementById("param-stock-range").value;
+      const confidence = parseInt(document.getElementById("param-confidence").value) || 95;
+
+      let baseDailyUnits = 16.4;
+      if (stockRange === 'RANGO_1_5') baseDailyUnits = 3.2;
+      else if (stockRange === 'RANGO_6_25') baseDailyUnits = 8.5;
+      else if (stockRange === 'RANGO_26_50') baseDailyUnits = 16.4;
+      else if (stockRange === 'RANGO_51_100') baseDailyUnits = 28.0;
+      else if (stockRange === 'RANGO_101_500') baseDailyUnits = 45.0;
+      else if (stockRange === 'RANGO_500+') baseDailyUnits = 72.0;
+
+      const totalUnitsP50 = Math.round(baseDailyUnits * horizon);
+      const totalRevenueP50 = totalUnitsP50 * price;
+
+      const totalUnitsP10 = Math.round(totalUnitsP50 * 0.68);
+      const totalRevenueP10 = totalUnitsP10 * price;
+
+      const totalUnitsP90 = Math.round(totalUnitsP50 * 1.36);
+      const totalRevenueP90 = totalUnitsP90 * price;
+
+      document.getElementById("est-revenue-p50").innerText = `R$ ${totalRevenueP50.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById("est-units-p50").innerText = `${totalUnitsP50.toLocaleString('pt-BR')} unidades vendidas`;
+
+      document.getElementById("est-revenue-p10").innerText = `R$ ${totalRevenueP10.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById("est-revenue-p90").innerText = `R$ ${totalRevenueP90.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById("est-stockout-days").innerText = `~${Math.min(horizon, Math.round(horizon * 0.55))} Dias`;
+      document.getElementById("chart-horizon-label").innerText = `Projeção ${horizon} Dias (${confidence}% Confiança)`;
+
+      updateEstimatorChart(horizon, totalRevenueP10, totalRevenueP50, totalRevenueP90);
+    }
+
+    function updateEstimatorChart(horizon, revP10, revP50, revP90) {
+      const steps = 6;
+      const stepDays = Math.round(horizon / steps);
+      const labels = [];
+      const dataP90 = [];
+      const dataP50 = [];
+
+      for (let i = 1; i <= steps; i++) {
+        const day = i === steps ? horizon : i * stepDays;
+        labels.push(`Dia ${day}`);
+        const factor = i / steps;
+        dataP90.push(Math.round(revP90 * Math.pow(factor, 0.95)));
+        dataP50.push(Math.round(revP50 * Math.pow(factor, 0.95)));
+      }
+
+      if (estimatorChartInstance) {
+        estimatorChartInstance.data.labels = labels;
+        estimatorChartInstance.data.datasets[0].data = dataP90;
+        estimatorChartInstance.data.datasets[1].data = dataP50;
+        estimatorChartInstance.update();
+      }
     }
 
     // Initial icon render

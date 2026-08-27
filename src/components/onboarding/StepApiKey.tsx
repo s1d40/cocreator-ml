@@ -31,6 +31,7 @@ export const StepApiKey: React.FC<StepApiKeyProps> = ({
   validationResult,
   onUseDemo,
   onNext,
+}) => {
   const isConnected = validationResult?.valid === true || token.startsWith('SIMULATION_') || (token.startsWith('APP_USR-') && validationResult?.valid !== false);
 
   return (
@@ -151,18 +152,6 @@ export const StepApiKey: React.FC<StepApiKeyProps> = ({
       </div>
 
       {/* Footer Navigation */}
-<<<<<<< HEAD
-      <div className="flex justify-end pt-2">
-        <button
-          type="button"
-          onClick={onNext}
-          disabled={!isConnected}
-          className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-xs transition transform active:scale-95"
-        >
-          <span>Avançar para o Radar de Concorrência</span>
-          <ArrowRight className="w-4 h-4" />
-        </button>
-=======
       <div className="flex items-center justify-between pt-2">
         {!isConnected && (
           <span className="text-xs text-amber-700 font-medium bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
@@ -180,7 +169,6 @@ export const StepApiKey: React.FC<StepApiKeyProps> = ({
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
->>>>>>> feat-onboarding-gating
       </div>
     </div>
   );
