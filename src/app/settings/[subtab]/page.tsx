@@ -3,6 +3,15 @@ import type { SettingsTab } from '../../components/SettingsPanel';
 
 const validSubTabs: SettingsTab[] = ['api', 'radar', 'estimator', 'pre-sales'];
 
+export function generateStaticParams() {
+  return [
+    { subtab: 'api' },
+    { subtab: 'radar' },
+    { subtab: 'estimator' },
+    { subtab: 'pre-sales' },
+  ];
+}
+
 export default function SubTabSettingsPage({ params }: { params: { subtab: string } }) {
   const subTabParam = params.subtab as SettingsTab;
   const initialSubTab = validSubTabs.includes(subTabParam) ? subTabParam : 'api';
