@@ -13,13 +13,16 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, unansweredCount }) => {
-  let activeSeller: any = null;
+  let isConnected = false;
   try {
     const settingsCtx = useSettings();
     activeSeller = settingsCtx.activeSeller;
+    isConnected = settingsCtx.isApiConnected;
   } catch {}
 
-  const storeName = activeSeller?.nickname || 'Mercado Livre Seller';
+  const storeName = isConnected
+    ? (activeSeller?.nickname || 'Vendedor Mercado Livre')
+    : 'Nenhuma Loja Conectada';
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">

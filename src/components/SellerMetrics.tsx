@@ -34,16 +34,16 @@ export const SellerMetrics: React.FC<SellerMetricsProps> = ({ sellerData }) => {
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-2xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-gray-900">Seller Reputation & Metrics</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{sellerData.sellerName}</h2>
             <ReadOnlyBadge size="sm" label="Read-Only View" />
           </div>
           <p className="text-gray-500 text-sm mt-1">
-            Store performance standards, buyer feedback distribution, and account status overview.
+            Métricas de desempenho da loja, reputação oficial Mercado Livre e resumo da conta ({sellerData.sellerId}).
           </p>
         </div>
         <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs px-3 py-2 rounded-xl font-semibold">
           <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          <span>Account Health: Excellent (Top Rated)</span>
+          <span className="capitalize">Status: {sellerData.reputationLevel}</span>
         </div>
       </div>
 

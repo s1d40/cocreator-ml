@@ -34,6 +34,12 @@ function OnboardingContent() {
     return res.valid;
   };
 
+  const handleTokenChange = (newToken: string) => {
+    setToken(newToken);
+    if (validationResult) {
+      setValidationResult(null);
+    }
+  };
   const handleUseDemo = async () => {
     const demoToken = 'SIMULATION_ML_ACCESS_TOKEN_' + Date.now();
     setToken(demoToken);
@@ -115,7 +121,7 @@ function OnboardingContent() {
         {currentStep === 1 && (
           <StepApiKey
             token={token}
-            onTokenChange={setToken}
+            onTokenChange={handleTokenChange}
             onValidate={handleValidateToken}
             isTesting={isTesting}
             validationResult={validationResult}
