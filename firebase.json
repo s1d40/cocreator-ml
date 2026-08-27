@@ -1,0 +1,16 @@
+{
+  "hosting": {
+    "site": "cocreator-ml00",
+    "public": "out",
+    "ignore": [
+      "firebase.json",
+      "**/.*"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
