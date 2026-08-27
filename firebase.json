@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "cocreator-ml",
+    "site": "cocreator-ml00",
     "public": "out",
     "ignore": [
       "firebase.json",

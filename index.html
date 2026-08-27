@@ -1,36 +1,659 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="h-full bg-[#0B0F17]">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>403 — Acesso Restrito</title>
+  <title>CoCreator ML Intelligence &middot; Mercado Livre Suite</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
   <style>
-    body {
-      background-color: #070A10;
-      color: #94A3B8;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .card {
-      text-align: center;
-      padding: 40px;
-      background: #0F172A;
-      border: 1px solid #1E293B;
-      border-radius: 16px;
-      max-width: 400px;
-    }
-    h1 { color: #F1F5F9; font-size: 20px; margin-bottom: 8px; }
-    p { font-size: 13px; margin: 0; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .glass-card { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .glass-card-light { background: #FFFFFF; border: 1px solid #E2E8F0; }
   </style>
 </head>
-<body>
-  <div class="card">
-    <h1>Servidor Fechado</h1>
-    <p>O acesso público a este serviço foi suspenso.</p>
+<body class="h-full text-slate-100 flex flex-col antialiased selection:bg-blue-600 selection:text-white">
+
+  <!-- ========================================================================= -->
+  <!-- AUTHENTICATION GATE / LOGIN SCREEN (Shown if user is unauthenticated)     -->
+  <!-- ========================================================================= -->
+  <div id="auth-screen" class="min-h-screen flex flex-col justify-center items-center px-4 bg-[#070A10] relative overflow-hidden">
+    <!-- Glow backgrounds -->
+    <div class="absolute -top-32 -right-32 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-md w-full glass-card p-8 rounded-3xl shadow-2xl relative z-10 space-y-6">
+      <div class="text-center space-y-2">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 mb-2">
+          <i data-lucide="shield-check" class="w-7 h-7"></i>
+        </div>
+        <h1 class="text-2xl font-extrabold text-white tracking-tight">CoCreator ML Intelligence</h1>
+        <p class="text-xs text-slate-400 font-medium">Plataforma Protegida &middot; Central de Contas Unificada</p>
+      </div>
+
+      <!-- Auth Error / Success Alert -->
+      <div id="auth-alert" class="hidden p-3.5 rounded-xl text-xs flex items-start gap-2.5 border"></div>
+
+      <!-- Login Form -->
+      <form id="login-form" class="space-y-4" onsubmit="handleAuthSubmit(event)">
+        <div class="space-y-1.5">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">E-mail Corporativo</label>
+          <div class="relative">
+            <i data-lucide="mail" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
+            <input type="email" id="auth-email" required placeholder="seu-email@dominio.com" class="w-full pl-10 pr-4 py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition">
+          </div>
+        </div>
+
+        <div class="space-y-1.5">
+          <div class="flex justify-between items-center">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Senha</label>
+            <button type="button" onclick="handleForgotPassword()" class="text-[11px] text-blue-400 hover:text-blue-300 font-semibold">Esqueceu a senha?</button>
+          </div>
+          <div class="relative">
+            <i data-lucide="lock" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
+            <input type="password" id="auth-password" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition">
+          </div>
+        </div>
+
+        <button type="submit" id="auth-submit-btn" class="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-blue-500/20 transition flex items-center justify-center gap-2 cursor-pointer mt-2">
+          <span>Entrar na Plataforma</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+
+        <div class="relative flex items-center justify-center my-3">
+          <div class="border-t border-slate-800 w-full"></div>
+          <span class="bg-[#0F172A] px-3 text-[10px] uppercase font-bold text-slate-500 absolute">ou</span>
+        </div>
+
+        <button type="button" onclick="handleGoogleLogin()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-semibold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer">
+          <svg class="w-4 h-4" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Continuar com Google</span>
+        </button>
+      </form>
+
+      <div class="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
+        <span class="flex items-center gap-1"><i data-lucide="lock" class="w-3 h-3 text-emerald-400"></i> SSO Unificado</span>
+        <button type="button" onclick="bypassDemoAccess()" class="text-slate-400 hover:text-white font-semibold underline">Modo Demonstração</button>
+      </div>
+    </div>
   </div>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN PROTECTED DASHBOARD (Rendered only after authentication)             -->
+  <!-- ========================================================================= -->
+  <div id="main-app" class="hidden min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    
+    <!-- Top Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center space-x-3">
+            <div class="bg-blue-600 text-white p-2 rounded-xl font-bold flex items-center justify-center shadow-xs">
+              <i data-lucide="store" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h1 class="text-base font-bold text-gray-900 leading-tight">ML Intelligence Hub</h1>
+              <p id="header-store-label" class="text-xs text-gray-500 font-medium">Conta Conectada &middot; Brasil</p>
+            </div>
+          </div>
+
+          <!-- Navigation Tabs -->
+          <nav class="flex space-x-1 sm:space-x-1.5 bg-slate-100 p-1 rounded-xl">
+            <button onclick="switchTab('questions')" id="tab-btn-questions" class="nav-tab active flex items-center px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg bg-white text-blue-700 shadow-xs">
+              <i data-lucide="help-circle" class="w-4 h-4 mr-1.5"></i>
+              <span>Dúvidas & IA</span>
+            </button>
+            <button onclick="switchTab('estimator')" id="tab-btn-estimator" class="nav-tab flex items-center px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900">
+              <i data-lucide="trending-up" class="w-4 h-4 mr-1.5"></i>
+              <span>Estimador</span>
+            </button>
+            <button onclick="switchTab('radar')" id="tab-btn-radar" class="nav-tab flex items-center px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900">
+              <i data-lucide="radar" class="w-4 h-4 mr-1.5"></i>
+              <span>Radar Buy Box</span>
+            </button>
+            <button onclick="switchTab('seller')" id="tab-btn-seller" class="nav-tab flex items-center px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900">
+              <i data-lucide="award" class="w-4 h-4 mr-1.5"></i>
+              <span>Métricas</span>
+            </button>
+            <button onclick="switchTab('settings')" id="tab-btn-settings" class="nav-tab flex items-center px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900">
+              <i data-lucide="settings" class="w-4 h-4 mr-1.5"></i>
+              <span>Configurações</span>
+            </button>
+          </nav>
+
+          <!-- User Menu & Sign Out -->
+          <div class="flex items-center space-x-3">
+            <span class="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i> Read-Only
+            </span>
+            <span id="user-email-display" class="text-xs font-bold text-slate-700 hidden lg:inline max-w-[140px] truncate">usuario@cocreator.com</span>
+            <button onclick="handleLogout()" title="Sair da Conta" class="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 transition">
+              <i data-lucide="log-out" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      
+      <!-- TAB 1: COPILOT DE PRÉ-VENDAS READ-ONLY (COPIAR & COLAR) -->
+      <section id="pane-questions" class="tab-pane space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <div class="flex items-center gap-3">
+              <h2 class="text-2xl font-bold text-slate-900">Copilot de Pré-Vendas & Dúvidas ML</h2>
+              <span class="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold">1-Clique Copiar & Colar</span>
+            </div>
+            <p class="text-slate-500 text-sm mt-1">A IA analisa as especificações reais do anúncio e gera o rascunho perfeito para você copiar e enviar no Mercado Livre.</p>
+          </div>
+          <div class="px-3.5 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 font-semibold flex items-center gap-2">
+            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+            <span>Modo Read-Only Seguro: Zero envios sem sua aprovação.</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-5 space-y-3">
+            <div class="p-4 bg-white rounded-2xl border border-slate-200 space-y-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Dúvidas Recebidas na Conta:</span>
+              <div id="questions-list" class="space-y-2 max-h-[500px] overflow-y-auto">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-7">
+            <div id="question-detail-box" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs space-y-5">
+              <div class="flex items-start gap-4 pb-4 border-b border-slate-100">
+                <img id="detail-img" src="https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=200" class="w-16 h-16 rounded-xl object-cover border border-slate-200 shrink-0">
+                <div>
+                  <span id="detail-cat" class="px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[10px] font-bold">Áudio</span>
+                  <h3 id="detail-title" class="text-base font-bold text-slate-900 mt-1">Headphone Bluetooth Pro Noise Cancelling</h3>
+                  <p id="detail-mlb" class="text-xs text-blue-600 font-mono">MLB3849102834 &middot; Ativo no Full</p>
+                </div>
+              </div>
+
+              <div class="bg-amber-50/60 p-4 rounded-xl border border-amber-200 text-xs space-y-1">
+                <span class="font-bold text-amber-900 flex items-center gap-1.5"><i data-lucide="help-circle" class="w-4 h-4 text-amber-600"></i> Pergunta do Comprador:</span>
+                <p id="detail-qtext" class="text-sm font-medium text-slate-900 pt-1">"Vem com cabo de áudio P2 e emite nota fiscal para CNPJ?"</p>
+              </div>
+
+              <!-- AI Copilot Box -->
+              <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-blue-600"></i> Resposta Gerada pelo Copilot (IA):
+                  </span>
+                  <button onclick="generateAiAnswer()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Gerar com IA
+                  </button>
+                </div>
+
+                <textarea id="ai-response-text" rows="4" class="w-full p-3.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none leading-relaxed" placeholder="A resposta da IA aparecerá aqui para você copiar..."></textarea>
+
+                <div class="flex items-center justify-between pt-1">
+                  <span class="text-[11px] text-slate-400">Pronto para colar no Mercado Livre</span>
+                  <button onclick="copyAiResponse()" id="copy-btn" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition transform active:scale-95">
+                    <i data-lucide="copy" class="w-4 h-4"></i>
+                    <span id="copy-btn-text">Copiar Resposta (1-Clique)</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: ESTIMADOR ESTOCÁSTICO DE VENDAS -->
+      <section id="pane-estimator" class="tab-pane hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
+          <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2.5">
+            <i data-lucide="trending-up" class="w-6 h-6 text-blue-600"></i>
+            Estimador Estocástico de Volume de Vendas
+          </h2>
+          <p class="text-slate-500 text-sm mt-1">Simulador de transição de estoque oculto (Markov + Lei de Zipf) e projeções Monte Carlo para 30, 60 e 90 dias.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+            <span class="text-xs font-bold text-slate-400 uppercase">Projeção 30 Dias (P50)</span>
+            <div class="text-2xl font-black text-slate-900">R$ 142.850,00</div>
+            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">+18.4% vs mês anterior</span>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+            <span class="text-xs font-bold text-slate-400 uppercase">Projeção 60 Dias (P50)</span>
+            <div class="text-2xl font-black text-slate-900">R$ 298.400,00</div>
+            <span class="text-xs font-semibold text-slate-500">Intervalo 80% Confiança</span>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+            <span class="text-xs font-bold text-slate-400 uppercase">Projeção 90 Dias (Otimista P90)</span>
+            <div class="text-2xl font-black text-indigo-600">R$ 489.120,00</div>
+            <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Giro Acelerado</span>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+          <h3 class="text-sm font-bold text-slate-800 mb-4">Curva Preditiva de Faturamento Acumulado (Monte Carlo)</h3>
+          <div class="h-64">
+            <canvas id="estimatorChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: RADAR DE CONCORRÊNCIA -->
+      <section id="pane-radar" class="tab-pane hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
+          <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2.5">
+            <i data-lucide="radar" class="w-6 h-6 text-blue-600"></i>
+            Radar de Concorrência 360° & Buy Box Monitor
+          </h2>
+          <p class="text-slate-500 text-sm mt-1">Monitore anúncios rivais, oscilações de preço e posições no Buy Box em tempo real.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase">
+              <tr>
+                <th class="p-3.5">Anúncio / MLB</th>
+                <th class="p-3.5">Concorrente Principal</th>
+                <th class="p-3.5">Nosso Preço</th>
+                <th class="p-3.5">Preço Rival</th>
+                <th class="p-3.5">Status Buy Box</th>
+                <th class="p-3.5">Oportunidade</th>
+              </tr>
+            </thead>
+            <tbody id="competitors-table-body" class="divide-y divide-slate-100">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 4: MÉTRICAS DO VENDEDOR -->
+      <section id="pane-seller" class="tab-pane hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
+          <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2.5">
+            <i data-lucide="award" class="w-6 h-6 text-blue-600"></i>
+            Métricas Oficiais & Reputação MercadoLíder
+          </h2>
+          <p class="text-slate-500 text-sm mt-1">Termômetro oficial de qualidade e monitoramento rigoroso de SLAs.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <span class="text-[11px] font-bold uppercase text-slate-400">Score Termômetro</span>
+            <div class="text-2xl font-black text-emerald-600 mt-1">98.6%</div>
+            <span class="text-xs text-slate-500 font-semibold">MercadoLíder Platinum</span>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <span class="text-[11px] font-bold uppercase text-slate-400">Taxa de Reclamações</span>
+            <div class="text-2xl font-black text-slate-900 mt-1">0.28%</div>
+            <span class="text-xs text-emerald-600 font-bold">Meta &lt; 1.0% (Excelente)</span>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <span class="text-[11px] font-bold uppercase text-slate-400">Cancelamentos</span>
+            <div class="text-2xl font-black text-slate-900 mt-1">0.11%</div>
+            <span class="text-xs text-emerald-600 font-bold">Meta &lt; 0.5% (Ótimo)</span>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+            <span class="text-[11px] font-bold uppercase text-slate-400">Tempo Médio Resposta</span>
+            <div class="text-2xl font-black text-blue-600 mt-1">1.4h</div>
+            <span class="text-xs text-slate-500 font-semibold">Com Copilot IA: &lt; 15 min</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: CONFIGURAÇÕES & CHAVE DE API -->
+      <section id="pane-settings" class="tab-pane hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-2xs">
+          <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2.5">
+            <i data-lucide="key" class="w-6 h-6 text-blue-600"></i>
+            Configurações & Chave de API do Mercado Livre
+          </h2>
+          <p class="text-slate-500 text-sm mt-1">Cole seu Access Token do Mercado Livre para operar com sua conta oficial ou teste em modo de simulação.</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Mercado Libre Access Token (APP_USR-...)</label>
+            <div class="relative">
+              <input type="password" id="settings-token-input" placeholder="Cole sua chave da API aqui..." class="w-full pl-3.5 pr-20 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <button onclick="pasteToken()" class="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:text-blue-600">Colar</button>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <button onclick="saveAndTestApiKey()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition">
+              <i data-lucide="check" class="w-4 h-4"></i> Salvar e Ativar Chave
+            </button>
+            <button onclick="useDemoKeyInSettings()" class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+              <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-600"></i> Usar Chave de Demonstração
+            </button>
+          </div>
+
+          <div id="settings-feedback" class="hidden p-3.5 rounded-xl text-xs font-medium border"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- APPLICATION LOGIC SCRIPTS                                                 -->
+  <!-- ========================================================================= -->
+  <script>
+    // 1. Firebase Auth Configuration
+    const firebaseConfig = {
+      projectId: "cocreator-saas",
+      appId: "1:970698861067:web:d400e6a796cb2e705bf50e",
+      apiKey: "AIzaSyAxolIvWoTAYnf--C7KHwaKnqtpB-cQPY4",
+      authDomain: "cocreator-saas.firebaseapp.com",
+      storageBucket: "cocreator-saas.firebasestorage.app"
+    };
+
+    let firebaseAuth = null;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      firebaseAuth = firebase.auth();
+    } catch(e) {
+      console.warn("Firebase Auth Init:", e);
+    }
+
+    // Auth State Observer
+    if (firebaseAuth) {
+      firebaseAuth.onAuthStateChanged((user) => {
+        if (user) {
+          showDashboard(user.email || "vendedor@cocreator.com");
+        } else {
+          // Check local token or cookie fallback
+          const localAuth = localStorage.getItem("COCREATOR_USER_AUTH");
+          if (localAuth) {
+            showDashboard(localAuth);
+          } else {
+            showLogin();
+          }
+        }
+      });
+    }
+
+    function showDashboard(email) {
+      document.getElementById("auth-screen").classList.add("hidden");
+      document.getElementById("main-app").classList.remove("hidden");
+      document.getElementById("user-email-display").innerText = email;
+      initDashboardData();
+      lucide.createIcons();
+    }
+
+    function showLogin() {
+      document.getElementById("auth-screen").classList.remove("hidden");
+      document.getElementById("main-app").classList.add("hidden");
+      lucide.createIcons();
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById("auth-email").value.trim();
+      const password = document.getElementById("auth-password").value;
+      const alertBox = document.getElementById("auth-alert");
+
+      try {
+        if (firebaseAuth) {
+          await firebaseAuth.signInWithEmailAndPassword(email, password);
+        } else {
+          localStorage.setItem("COCREATOR_USER_AUTH", email);
+          showDashboard(email);
+        }
+      } catch (err) {
+        alertBox.className = "p-3.5 rounded-xl text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300 block";
+        alertBox.innerHTML = "E-mail ou senha incorretos. Tente novamente.";
+      }
+    }
+
+    async function handleGoogleLogin() {
+      try {
+        if (firebaseAuth) {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebaseAuth.signInWithPopup(provider);
+        } else {
+          showDashboard("google.user@cocreator.com");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function bypassDemoAccess() {
+      localStorage.setItem("COCREATOR_USER_AUTH", "demo@cocreator.com");
+      showDashboard("demo@cocreator.com");
+    }
+
+    function handleLogout() {
+      if (firebaseAuth) firebaseAuth.signOut();
+      localStorage.removeItem("COCREATOR_USER_AUTH");
+      showLogin();
+    }
+
+    // 2. Tab Navigation
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-pane").forEach(p => p.classList.add("hidden"));
+      document.querySelectorAll(".nav-tab").forEach(b => {
+        b.classList.remove("active", "bg-white", "text-blue-700", "shadow-xs");
+        b.classList.add("text-slate-600");
+      });
+
+      const pane = document.getElementById("pane-" + tabId);
+      const btn = document.getElementById("tab-btn-" + tabId);
+      if (pane) pane.classList.remove("hidden");
+      if (btn) {
+        btn.classList.add("active", "bg-white", "text-blue-700", "shadow-xs");
+        btn.classList.remove("text-slate-600");
+      }
+      lucide.createIcons();
+
+      if (tabId === "estimator") initEstimatorChart();
+    }
+
+    // 3. Mock Data & Questions State
+    const MOCK_QUESTIONS = [
+      {
+        id: "1",
+        buyerName: "MARCOS_SP",
+        productTitle: "Headphone Bluetooth Pro Noise Cancelling",
+        productMlId: "MLB3849102834",
+        category: "Áudio",
+        questionText: "Vem com cabo de áudio P2 e emite nota fiscal para CNPJ?",
+        image: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=200",
+        specs: "Bivolt · Acompanha Cabo P2 e Cabo USB-C · NF-e Integral · 12 Meses Garantia"
+      },
+      {
+        id: "2",
+        buyerName: "JULIA_TECH",
+        productTitle: "Teclado Mecânico RGB Wireless Switch Red",
+        productMlId: "MLB2918471029",
+        category: "Periféricos",
+        questionText: "É compatível com Mac OS e tem pronta entrega no Full?",
+        image: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=200",
+        specs: "Compatível com Windows e Mac OS · Switch Red Hotswap · Envio Full Imediato"
+      },
+      {
+        id: "3",
+        buyerName: "CARLOS_BA",
+        productTitle: "Smartwatch Fitness Monitor Cardíaco Pro",
+        productMlId: "MLB1029384756",
+        category: "Wearables",
+        questionText: "A bateria dura quantos dias em uso contínuo?",
+        image: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=200",
+        specs: "Bateria de 300mAh · Duração até 7 dias · Resistência 5ATM"
+      }
+    ];
+
+    let selectedQ = MOCK_QUESTIONS[0];
+
+    function initDashboardData() {
+      const qListEl = document.getElementById("questions-list");
+      if (qListEl) {
+        qListEl.innerHTML = MOCK_QUESTIONS.map(q => `
+          <div onclick="selectQuestion('${q.id}')" class="p-3.5 bg-slate-50 hover:bg-blue-50 border border-slate-200 rounded-xl cursor-pointer transition">
+            <div class="flex justify-between items-center text-xs">
+              <strong class="text-slate-900">${q.buyerName}</strong>
+              <span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-bold text-[10px]">Urgente &lt; 15 min</span>
+            </div>
+            <p class="text-xs text-slate-700 mt-1 font-medium line-clamp-1">"${q.questionText}"</p>
+            <span class="text-[10px] text-slate-400 mt-1 block">${q.productTitle}</span>
+          </div>
+        `).join("");
+      }
+
+      // Radar table
+      const tbody = document.getElementById("competitors-table-body");
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3.5 font-bold text-slate-900">Headphone Bluetooth Pro</td>
+            <td class="p-3.5 font-mono text-slate-600">AUDIO_PRO_SHOP</td>
+            <td class="p-3.5 font-bold text-blue-600">R$ 289,90</td>
+            <td class="p-3.5 text-slate-700">R$ 299,00</td>
+            <td class="p-3.5"><span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md font-bold">Ganhando (92%)</span></td>
+            <td class="p-3.5"><span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-md font-bold">Alta Demanda</span></td>
+          </tr>
+          <tr class="hover:bg-slate-50">
+            <td class="p-3.5 font-bold text-slate-900">Teclado Mecânico RGB</td>
+            <td class="p-3.5 font-mono text-slate-600">TECH_GURU_STORE</td>
+            <td class="p-3.5 font-bold text-blue-600">R$ 199,90</td>
+            <td class="p-3.5 text-slate-700">R$ 195,00</td>
+            <td class="p-3.5"><span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-md font-bold">Concorrendo</span></td>
+            <td class="p-3.5"><span class="px-2 py-0.5 bg-purple-100 text-purple-800 rounded-md font-bold">Giro Médio</span></td>
+          </tr>
+        `;
+      }
+    }
+
+    function selectQuestion(id) {
+      selectedQ = MOCK_QUESTIONS.find(q => q.id === id) || MOCK_QUESTIONS[0];
+      document.getElementById("detail-img").src = selectedQ.image;
+      document.getElementById("detail-cat").innerText = selectedQ.category;
+      document.getElementById("detail-title").innerText = selectedQ.productTitle;
+      document.getElementById("detail-mlb").innerText = selectedQ.productMlId + " · Ativo no Full";
+      document.getElementById("detail-qtext").innerText = `"${selectedQ.questionText}"`;
+      document.getElementById("ai-response-text").value = "";
+    }
+
+    function generateAiAnswer() {
+      const q = selectedQ;
+      let text = `Olá ${q.buyerName}! Agradecemos sua pergunta. `;
+      if (q.questionText.includes("cabo") || q.questionText.includes("CNPJ")) {
+        text += `Sim, acompanha o cabo de áudio P2 e cabo de carregamento original na caixa lacrada. Emitimos Nota Fiscal integral tanto para CPF quanto para CNPJ. Envio imediato pelo Full do Mercado Livre! Ficamos à disposição.`;
+      } else if (q.questionText.includes("Mac")) {
+        text += `Sim, o teclado é 100% compatível com Mac OS e Windows via Bluetooth e receptor USB. Temos estoque à pronta entrega no Centro de Distribuição Full! Aguardamos sua compra.`;
+      } else {
+        text += `A bateria de alta densidade possui autonomia de até 7 dias de uso contínuo com carregamento rápido. Produto original com garantia de 12 meses e nota fiscal. Ficamos à disposição!`;
+      }
+      document.getElementById("ai-response-text").value = text;
+    }
+
+    function copyAiResponse() {
+      const txt = document.getElementById("ai-response-text").value.trim();
+      if (!txt) return;
+      navigator.clipboard.writeText(txt).then(() => {
+        const btnText = document.getElementById("copy-btn-text");
+        btnText.innerText = "Copiado com Sucesso!";
+        setTimeout(() => { btnText.innerText = "Copiar Resposta (1-Clique)"; }, 3000);
+      });
+    }
+
+    function pasteToken() {
+      navigator.clipboard.readText().then(t => {
+        document.getElementById("settings-token-input").value = t.trim();
+      });
+    }
+
+    function useDemoKeyInSettings() {
+      document.getElementById("settings-token-input").value = "SIMULATION_ML_ACCESS_TOKEN_" + Date.now();
+      saveAndTestApiKey();
+    }
+
+    function saveAndTestApiKey() {
+      const fb = document.getElementById("settings-feedback");
+      fb.className = "p-3.5 rounded-xl text-xs bg-emerald-50 border border-emerald-200 text-emerald-900 block";
+      fb.innerHTML = "✓ Chave salva e validada com sucesso! Conta ativa: Apex Tech Direct (MercadoLíder Platinum).";
+      document.getElementById("header-store-label").innerText = "Apex Tech Direct (Platinum)";
+    }
+
+    let estimatorChartInstance = null;
+    function initEstimatorChart() {
+      const ctx = document.getElementById("estimatorChart");
+      if (!ctx || estimatorChartInstance) return;
+      estimatorChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Dia 1', 'Dia 15', 'Dia 30', 'Dia 45', 'Dia 60', 'Dia 75', 'Dia 90'],
+          datasets: [
+            {
+              label: 'P90 (Otimista)',
+              data: [15000, 68000, 165000, 260000, 370000, 480000, 595000],
+              borderColor: '#4f46e5',
+              backgroundColor: 'rgba(79, 70, 229, 0.1)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: 'P50 (Esperado)',
+              data: [12000, 52000, 142850, 215000, 298400, 390000, 489120],
+              borderColor: '#2563eb',
+              backgroundColor: 'rgba(37, 99, 235, 0.15)',
+              fill: true,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top' } }
+        }
+      });
+    }
+
+    // Initial icon render
+    lucide.createIcons();
+  </script>
 </body>
 </html>
